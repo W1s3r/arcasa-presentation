@@ -928,14 +928,13 @@ function buildRoom() {
 function buildAVPPerson(avpModel) {
     const person = new THREE.Group();
 
-    // Head (LeePerrySmith or fallback sphere)
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6, metalness: 0.1 });
+    // Lighter mannequin materials - visible against dark background
+    const headMat = new THREE.MeshStandardMaterial({ color: 0x99aabb, roughness: 0.5, metalness: 0.15 });
 
-    // Stylized bust from primitives (always available, fast)
-    // Head
+    // Stylized bust from primitives
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 32, 32), headMat);
     head.position.y = 0.9;
-    head.scale.set(1, 1.15, 1); // slightly elongated
+    head.scale.set(1, 1.15, 1);
     person.add(head);
 
     // Neck
@@ -943,14 +942,14 @@ function buildAVPPerson(avpModel) {
     neck.position.y = 0.28;
     person.add(neck);
 
-    // Shoulders
-    const shoulderMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8 });
-    const shoulders = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.55, 0.5, 16), shoulderMat);
+    // Shoulders & torso - slightly darker than head but still visible
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x667788, roughness: 0.7, metalness: 0.1 });
+    const shoulders = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.55, 0.5, 16), bodyMat);
     shoulders.position.y = -0.05;
     person.add(shoulders);
 
     // Torso
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.45, 0.8, 16), shoulderMat);
+    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.45, 0.8, 16), bodyMat);
     torso.position.y = -0.5;
     person.add(torso);
 
@@ -1093,24 +1092,37 @@ async function loadProgressiveModels() {
         models.avpPersonNatural = buildAVPPerson(models.avp);
         models.avpPersonPower = buildAVPPerson(models.avp);
 
-        // Add mode-specific floating UI
+        // Position 3 persons across the room: left, center, right
         const touchUI = createModeUI('touch');
         models.avpPersonTouch.add(touchUI);
-        models.avpPersonTouch.position.set(3, -0.8, -1);
+        models.avpPersonTouch.position.set(-4, -0.5, -1); // LEFT
 
         const naturalUI = createModeUI('natural');
         models.avpPersonNatural.add(naturalUI);
-        models.avpPersonNatural.position.set(3, -0.8, -1);
+        models.avpPersonNatural.position.set(0, -0.5, -1); // CENTER
 
         const powerUI = createModeUI('power');
         models.avpPersonPower.add(powerUI);
-        models.avpPersonPower.position.set(3, -0.8, -1);
+        models.avpPersonPower.position.set(4, -0.5, -1); // RIGHT
 
-        // Initially hide mode-specific persons, show on slide change
+        // All start hidden, shown together during modes section
         models.avpPersonTouch.visible = false;
         models.avpPersonNatural.visible = false;
         models.avpPersonPower.visible = false;
         groups.room.add(models.avpPersonTouch, models.avpPersonNatural, models.avpPersonPower);
+
+        // Add a spotlight for each person so they're well-lit
+        const personSpots = [
+            { pos: [-4, 5, 2], target: [-4, 0, -1] },
+            { pos: [0, 5, 2], target: [0, 0, -1] },
+            { pos: [4, 5, 2], target: [4, 0, -1] },
+        ];
+        personSpots.forEach(s => {
+            const sp = new THREE.SpotLight(0xeeeeff, 3, 12, 0.5, 0.7);
+            sp.position.set(...s.pos);
+            sp.target.position.set(...s.target);
+            groups.room.add(sp, sp.target);
+        });
 
         console.log('AVP person composites built for 3 modes');
     } catch (e) { console.warn('AVP load failed:', e); }
@@ -1224,12 +1236,12 @@ const slideMap = [
     /* 4  Problem     */ { state: 'opening', cam: [-1, 2, 7], tgt: [0, 0.5, 0] },
     /* 5  Solution    */ { state: 'opening', cam: [0, 2, 6], tgt: [0, 0.5, 0] },
     /* 6  Arch        */ { state: 'opening', cam: [0, 1.5, 8], tgt: [0, 0.5, 0] },
-    /* 7  §AVP Modes  */ { state: 'room', cam: [0, 3, 9], tgt: [0, 1.5, -2] },
-    /* 8  3 Modes     */ { state: 'room', cam: [0, 2.5, 7], tgt: [0, 1.5, -2] },
-    /* 9  Touch       */ { state: 'room', cam: [-3, 2, 3], tgt: [-4, 1.5, -2] },
-    /* 10 Natural     */ { state: 'room', cam: [3, 2, 3], tgt: [4, 1.5, -2] },
-    /* 11 Power       */ { state: 'room', cam: [0, 3.5, 10], tgt: [0, 1, -2] },
-    /* 12 UI Improve  */ { state: 'room', cam: [0, 4, 12], tgt: [0, 1.5, -2] },
+    /* 7  §AVP Modes  */ { state: 'room', cam: [0, 2.5, 10], tgt: [0, 0.5, -1] },
+    /* 8  3 Modes     */ { state: 'room', cam: [0, 2, 8], tgt: [0, 0.5, -1] },
+    /* 9  Touch       */ { state: 'room', cam: [-3.5, 1.5, 3], tgt: [-4, 0.3, -1] },
+    /* 10 Natural     */ { state: 'room', cam: [0.5, 1.5, 3], tgt: [0, 0.3, -1] },
+    /* 11 Power       */ { state: 'room', cam: [4.5, 1.5, 3], tgt: [4, 0.3, -1] },
+    /* 12 UI Improve  */ { state: 'room', cam: [0, 3, 11], tgt: [0, 0.5, -1] },
     /* 13 §Switch     */ { state: 'switch', cam: [0, 1.5, 5], tgt: [0, 0.5, 0] },
     /* 14 Switch Over */ { state: 'switch', cam: [0, 1.5, 4], tgt: [0, 0.5, 0] },
     /* 15 Modules     */ { state: 'switch', cam: [1, 1.5, 5], tgt: [0, 0.5, 0] },
@@ -1302,11 +1314,12 @@ Reveal.on('slidechanged', event => {
     if (idx === 20) setTimeout(dollhouseBuildAnim, 800);
     if (idx === 22) setTimeout(startClosingOrbit, 800);
 
-    // Show correct AVP person model per mode slide
+    // Show all 3 AVP persons during modes section (slides 7-12), camera pulls focus per slide
+    const inModesSection = idx >= 7 && idx <= 12;
     if (models.avpPersonTouch) {
-        models.avpPersonTouch.visible = (idx === 9);
-        models.avpPersonNatural.visible = (idx === 10);
-        models.avpPersonPower.visible = (idx === 11);
+        models.avpPersonTouch.visible = inModesSection;
+        models.avpPersonNatural.visible = inModesSection;
+        models.avpPersonPower.visible = inModesSection;
     }
 });
 
