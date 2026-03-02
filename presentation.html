@@ -947,21 +947,21 @@ function createModeUI(type, personModel) {
     const s = h / 3; // scale factor (assuming ~3 unit normalized height)
 
     if (type === 'touch') {
-        // Panels at RIGHT hand fingertip area — shifted right and raised high
+        // Panels at LEFT side (negative X) — flipped to match raised hand
         const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMat);
-        panel.position.set(1.8 * s, 1.2 * s, 1.2 * s);
-        panel.rotation.y = -0.3;
+        panel.position.set(-1.8 * s, 1.2 * s, 1.2 * s);
+        panel.rotation.y = 0.3;
         uiGroup.add(panel);
         const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(0.6 * s, 0.4 * s), panelMatAlt);
-        panel2.position.set(2.0 * s, 0.9 * s, 1.0 * s);
-        panel2.rotation.y = -0.4;
+        panel2.position.set(-2.0 * s, 0.9 * s, 1.0 * s);
+        panel2.rotation.y = 0.4;
         uiGroup.add(panel2);
         // Fingertip glow dots
         const glowMat = new THREE.MeshStandardMaterial({
             color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 1.0,
             transparent: true, opacity: 0.9
         });
-        [[1.6 * s, 1.1 * s, 1.15 * s], [1.75 * s, 1.0 * s, 1.1 * s], [1.65 * s, 0.85 * s, 1.05 * s]].forEach(p => {
+        [[-1.6 * s, 1.1 * s, 1.15 * s], [-1.75 * s, 1.0 * s, 1.1 * s], [-1.65 * s, 0.85 * s, 1.05 * s]].forEach(p => {
             const dot = new THREE.Mesh(new THREE.SphereGeometry(0.06 * s, 12, 12), glowMat);
             dot.position.set(...p);
             uiGroup.add(dot);
@@ -974,22 +974,29 @@ function createModeUI(type, personModel) {
         panel2.position.set(-1.5 * s, 1.0 * s, 2.5 * s); panel2.rotation.y = -0.4; uiGroup.add(panel2);
         const panel3 = new THREE.Mesh(new THREE.PlaneGeometry(0.8 * s, 0.6 * s), panelMatAlt);
         panel3.position.set(1.8 * s, 1.4 * s, 2.6 * s); panel3.rotation.y = 0.3; uiGroup.add(panel3);
-        // Gaze ray from eye level forward to main panel
+        // Gaze ray from eye level toward the RIGHT panel (panel3)
         const rayMat = new THREE.MeshStandardMaterial({
             color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.8,
             transparent: true, opacity: 0.35
         });
-        const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015 * s, 0.015 * s, 3.0 * s, 8), rayMat);
-        ray.position.set(0.15 * s, 1.2 * s, 1.5 * s); ray.rotation.x = Math.PI / 2;
+        const eyePos = new THREE.Vector3(0.1 * s, 1.2 * s, 0.2 * s);
+        const targetPos = new THREE.Vector3(1.8 * s, 1.4 * s, 2.6 * s); // panel3 center
+        const rayDir = new THREE.Vector3().subVectors(targetPos, eyePos);
+        const rayLen = rayDir.length();
+        const rayMid = eyePos.clone().add(targetPos).multiplyScalar(0.5);
+        const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015 * s, 0.015 * s, rayLen, 8), rayMat);
+        ray.position.copy(rayMid);
+        ray.lookAt(targetPos);
+        ray.rotateX(Math.PI / 2);
         uiGroup.add(ray);
         // No voice wave arcs — removed per user request
     } else if (type === 'power') {
-        // Hand SPHERES at chest height, in front
-        const handL = new THREE.Mesh(new THREE.SphereGeometry(0.25 * s, 16, 16), panelMat);
-        handL.position.set(-0.7 * s, 1.0 * s, 0.8 * s);
+        // Hand SPHERES — smaller, closer together
+        const handL = new THREE.Mesh(new THREE.SphereGeometry(0.12 * s, 16, 16), panelMat);
+        handL.position.set(-0.3 * s, 1.0 * s, 0.8 * s);
         uiGroup.add(handL);
-        const handR = new THREE.Mesh(new THREE.SphereGeometry(0.25 * s, 16, 16), panelMat);
-        handR.position.set(0.7 * s, 1.0 * s, 0.8 * s);
+        const handR = new THREE.Mesh(new THREE.SphereGeometry(0.12 * s, 16, 16), panelMat);
+        handR.position.set(0.3 * s, 1.0 * s, 0.8 * s);
         uiGroup.add(handR);
         // Distant panels IN FRONT, raised higher
         const farPositions = [
@@ -1011,8 +1018,8 @@ function createModeUI(type, personModel) {
             transparent: true, opacity: 0.3
         });
         const handPositions = [
-            new THREE.Vector3(-0.7 * s, 1.0 * s, 0.8 * s),
-            new THREE.Vector3(0.7 * s, 1.0 * s, 0.8 * s)
+            new THREE.Vector3(-0.3 * s, 1.0 * s, 0.8 * s),
+            new THREE.Vector3(0.3 * s, 1.0 * s, 0.8 * s)
         ];
         farPositions.forEach((fp, i) => {
             const hand = handPositions[i % 2];
