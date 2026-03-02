@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arcasa — Progress Review</title>
+    <title>SMART — Progress Review</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -191,39 +191,17 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
         <aside class="notes">~30s — Watch the phone animation. "This is how most people interact with their smart home today. What if there was a better way?"</aside>
     </section>
 
-    <!-- ====== SLIDE 3: Introducing Arcasa ====== -->
+    <!-- ====== SLIDE 3: Introducing SMART ====== -->
     <section>
         <div class="sc centered">
             <p class="label">INTRODUCING</p>
-            <h1 class="hero-title">ARCASA</h1>
+            <h1 class="hero-title">SMART</h1>
             <p class="subtitle">Spatial smart home control for Apple Vision Pro</p>
         </div>
-        <aside class="notes">~20s — "This is Arcasa." Pause on the 3D dollhouse. "Control your entire home through spatial computing."</aside>
+        <aside class="notes">~20s — "This is SMART." Pause on the AVP model. "Control your entire home through spatial computing."</aside>
     </section>
 
-    <!-- ====== SLIDE 4: The Project ====== -->
-    <section>
-        <div class="sc padded">
-            <p class="label">CONTEXT</p>
-            <h2>The Project</h2>
-            <div class="cards cards-3" style="margin-top:32px;">
-                <div class="glass">
-                    <h3>Course</h3>
-                    <p>IDC &mdash; ENGE 4736<br>Interdisciplinary Capstone Design</p>
-                </div>
-                <div class="glass">
-                    <h3>Challenge</h3>
-                    <p>Smart home control is fragmented across dozens of apps and interfaces</p>
-                </div>
-                <div class="glass">
-                    <h3>Our Solution</h3>
-                    <p>A unified spatial interface on Apple Vision Pro with custom hardware integration</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ====== SLIDE 5: Meet the Team ====== -->
+    <!-- ====== SLIDE 4: Meet the Team ====== -->
     <section>
         <div class="sc centered">
             <p class="label">TEAM SMART</p>
@@ -258,7 +236,59 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
         </div>
     </section>
 
-    <!-- ====== SLIDE 6: Architecture ====== -->
+    <!-- ====== SLIDE 5: The Problem ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">THE PROBLEM</p>
+            <h2>Smart Homes Are Fragmented</h2>
+            <div class="cards cards-3" style="margin-top:32px;">
+                <div class="glass fragment fade-up">
+                    <h3 style="font-size:36px;color:var(--accent);">40+</h3>
+                    <p>separate apps to manage a single smart home</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Disconnected</h3>
+                    <p>Controls are completely disconnected from the physical devices they manage</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>No Spatial Awareness</h3>
+                    <p>Existing interfaces have zero understanding of where devices actually are in your home</p>
+                </div>
+            </div>
+            <div class="cards" style="margin-top:20px;">
+                <div class="glass" style="flex:1;">
+                    <h4 style="color:var(--text2);margin-bottom:8px;">Target Users</h4>
+                    <p>Smart home enthusiasts &bull; Accessibility-focused users &bull; Spatial computing early adopters</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 6: The Solution ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">THE SOLUTION</p>
+            <h2>What is SMART?</h2>
+            <div class="cards cards-3" style="margin-top:32px;">
+                <div class="glass fragment fade-up">
+                    <h3>Vision Pro App</h3>
+                    <p>Spatial device control in 3D space &mdash; see and interact with your devices where they actually are</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>iPhone Companion</h3>
+                    <p>LiDAR room scanning via RoomPlan API &mdash; builds a 3D map of your home</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Home Assistant Hub</h3>
+                    <p>Device management &amp; automation engine running locally on Raspberry Pi</p>
+                </div>
+            </div>
+            <p style="margin-top:24px;text-align:center;max-width:700px;margin-left:auto;margin-right:auto;">Scan room (iPhone) &rarr; Manage devices (Hub) &rarr; Spatial control (Vision Pro)</p>
+            <p style="margin-top:12px;text-align:center;color:var(--accent);font-weight:500;font-size:14px;letter-spacing:1px;">PRIVACY-FIRST: ALL PROCESSING LOCAL, ZERO CLOUD DEPENDENCY</p>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 7: Architecture ====== -->
     <section>
         <div class="sc padded">
             <p class="label">SYSTEM DESIGN</p>
@@ -269,21 +299,23 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
                     <p>Spatial UI, 3 interaction modes, real-time device control via SwiftUI + RealityKit</p>
                 </div>
                 <div class="arch-arrow">&rarr;</div>
-                <div class="glass" style="flex:1;">
-                    <h3>Home Assistant</h3>
-                    <p>Central hub running on Raspberry Pi, manages devices via MQTT &amp; REST API</p>
+                <div class="glass" style="flex:1.2;border-color:var(--accent);">
+                    <h3>Home Assistant Hub</h3>
+                    <p>Central hub on Raspberry Pi &mdash; MQTT broker, REST API, device management &amp; automations</p>
                 </div>
-                <div class="arch-arrow">&rarr;</div>
+                <div class="arch-arrow">&larr;</div>
                 <div class="glass" style="flex:1;">
                     <h3>Switch Box</h3>
                     <p>Custom ESP32 hardware for physical switch control with magnetic modules</p>
                 </div>
             </div>
-            <div class="arch-sub">
+            <div class="arch-sub" style="margin-top:16px;">
                 <div class="glass" style="text-align:center;">
                     <h3>iPhone Companion</h3>
-                    <p>RoomPlan scanning feeds 3D room data into the Dollhouse View</p>
+                    <p>RoomPlan LiDAR scanning &rarr; USDZ mesh &rarr; Hub &rarr; Dollhouse View on AVP</p>
                 </div>
+                <div class="arch-arrow" style="margin:0 12px;">&uarr;</div>
+                <p style="color:var(--text2);font-size:14px;align-self:center;">feeds into Hub</p>
             </div>
         </div>
     </section>
@@ -631,10 +663,10 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
         </div>
     </section>
 
-    <!-- ====== SLIDE 24: Thank You ====== -->
+    <!-- ====== SLIDE 25: Thank You ====== -->
     <section>
         <div class="closing">
-            <h1>ARCASA</h1>
+            <h1>SMART</h1>
             <p class="tagline">Your Home, at Your Fingertips</p>
             <p class="q">Questions?</p>
         </div>
@@ -834,34 +866,33 @@ function normalize(m, size = 3) {
 
 async function loadModels() {
     try {
-        const [dh, sw, ph] = await Promise.all([
-            gltf.loadAsync('assets/images/pptx/media/model3d7.glb'),
+        const [lab, sw, ph] = await Promise.all([
+            gltf.loadAsync('assets/models/lab.glb'),
             gltf.loadAsync('assets/images/pptx/media/model3d11.glb'),
             gltf.loadAsync('assets/images/pptx/media/model3d1.glb'),
         ]);
-        models.dollhouse = normalize(dh.scene, 3);
+        models.lab = normalize(lab.scene, 3);
         models.switchBox = normalize(sw.scene, 2.5);
         models.phone = normalize(ph.scene, 2);
 
-        // Opening: dollhouse gentle rotation
-        const dhClone1 = models.dollhouse.clone();
-        groups.opening.add(dhClone1);
+        // Opening: AVP model loads progressively, show nothing initially
+        // (AVP added to opening group once loaded in loadProgressiveModels)
 
         // Switch section
         groups.switch.add(models.switchBox);
 
-        // Dollhouse section
-        const dhClone2 = models.dollhouse.clone();
-        groups.dollhouse.add(dhClone2);
+        // Dollhouse section: use Lab scan model
+        const labClone1 = models.lab.clone();
+        groups.dollhouse.add(labClone1);
 
         // Room: build simplified environment + devices
         buildRoom();
 
-        // Closing: all three
-        const dhc = models.dollhouse.clone(); dhc.position.set(-4, 0, 0);
+        // Closing: all three (lab, switch, phone)
+        const labc = models.lab.clone(); labc.position.set(-4, 0, 0);
         const swc = models.switchBox.clone(); swc.position.set(0, 0, 0);
         const phc = models.phone.clone(); phc.position.set(4, 0, 0);
-        groups.closing.add(dhc, swc, phc);
+        groups.closing.add(labc, swc, phc);
 
         console.log('Core models loaded');
 
@@ -915,11 +946,13 @@ async function loadProgressiveModels() {
         console.log('Progressive models loaded');
     } catch (e) { console.warn('Progressive load failed:', e); }
 
-    // AVP headset (heavy)
+    // AVP headset (heavy) — used as opening hero model
     try {
         const avp = await gltf.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
-        models.avp = normalize(avp.scene, 2);
-        console.log('AVP model loaded');
+        models.avp = normalize(avp.scene, 3);
+        // Add to opening group as the hero rotating model
+        groups.opening.add(models.avp);
+        console.log('AVP model loaded → opening group');
     } catch (e) { console.warn('AVP load failed:', e); }
 }
 
@@ -1022,32 +1055,33 @@ let currentState = 'none';
 let idleAngle = 0;
 let idleEnabled = true;
 
-// Slide index → scene config
+// Slide index → scene config (25 slides)
 const slideMap = [
-    /* 0  */ { state: 'none' },
-    /* 1  */ { state: 'none' },
-    /* 2  */ { state: 'opening', cam: [0, 2, 7], tgt: [0, 0.3, 0] },
-    /* 3  */ { state: 'opening', cam: [2, 2.5, 6], tgt: [0, 0.3, 0] },
-    /* 4  */ { state: 'opening', cam: [-1, 2, 7], tgt: [0, 0.5, 0] },
-    /* 5  */ { state: 'opening', cam: [0, 1.5, 8], tgt: [0, 0.5, 0] },
-    /* 6  */ { state: 'room', cam: [0, 3, 9], tgt: [0, 1.5, -2] },
-    /* 7  */ { state: 'room', cam: [0, 2.5, 7], tgt: [0, 1.5, -2] },
-    /* 8  */ { state: 'room', cam: [-3, 2, 3], tgt: [-4, 1.5, -2] },
-    /* 9  */ { state: 'room', cam: [3, 2, 3], tgt: [4, 1.5, -2] },
-    /* 10 */ { state: 'room', cam: [0, 3.5, 10], tgt: [0, 1, -2] },
-    /* 11 */ { state: 'room', cam: [0, 4, 12], tgt: [0, 1.5, -2] },
-    /* 12 */ { state: 'switch', cam: [0, 1.5, 5], tgt: [0, 0.5, 0] },
-    /* 13 */ { state: 'switch', cam: [0, 1.5, 4], tgt: [0, 0.5, 0] },
-    /* 14 */ { state: 'switch', cam: [1, 1.5, 5], tgt: [0, 0.5, 0] },
-    /* 15 */ { state: 'switch', cam: [-1.5, 1, 4.5], tgt: [0, 0.5, 0] },
-    /* 16 */ { state: 'switch', cam: [0, 2, 5], tgt: [0, 0.5, 0] },
-    /* 17 */ { state: 'dollhouse', cam: [3, 3.5, 5], tgt: [0, 0, 0] },
-    /* 18 */ { state: 'dollhouse', cam: [3, 4, 5], tgt: [0, 0, 0] },
-    /* 19 */ { state: 'dollhouse', cam: [2, 2, 4], tgt: [0, 0, 0] },
-    /* 20 */ { state: 'dollhouse', cam: [0, 2, 5], tgt: [0, 0, 0] },
-    /* 21 */ { state: 'closing', cam: [0, 2.5, 10], tgt: [0, 0.5, 0] },
-    /* 22 */ { state: 'closing', cam: [0, 3, 10], tgt: [0, 0.5, 0] },
-    /* 23 */ { state: 'closing', cam: [0, 3, 12], tgt: [0, 0.5, 0] },
+    /* 0  Hook        */ { state: 'none' },
+    /* 1  Phone Demo  */ { state: 'none' },
+    /* 2  Intro SMART */ { state: 'opening', cam: [0, 2, 7], tgt: [0, 0.3, 0] },
+    /* 3  Team        */ { state: 'opening', cam: [2, 2.5, 6], tgt: [0, 0.3, 0] },
+    /* 4  Problem     */ { state: 'opening', cam: [-1, 2, 7], tgt: [0, 0.5, 0] },
+    /* 5  Solution    */ { state: 'opening', cam: [0, 2, 6], tgt: [0, 0.5, 0] },
+    /* 6  Arch        */ { state: 'opening', cam: [0, 1.5, 8], tgt: [0, 0.5, 0] },
+    /* 7  §AVP Modes  */ { state: 'room', cam: [0, 3, 9], tgt: [0, 1.5, -2] },
+    /* 8  3 Modes     */ { state: 'room', cam: [0, 2.5, 7], tgt: [0, 1.5, -2] },
+    /* 9  Touch       */ { state: 'room', cam: [-3, 2, 3], tgt: [-4, 1.5, -2] },
+    /* 10 Natural     */ { state: 'room', cam: [3, 2, 3], tgt: [4, 1.5, -2] },
+    /* 11 Power       */ { state: 'room', cam: [0, 3.5, 10], tgt: [0, 1, -2] },
+    /* 12 UI Improve  */ { state: 'room', cam: [0, 4, 12], tgt: [0, 1.5, -2] },
+    /* 13 §Switch     */ { state: 'switch', cam: [0, 1.5, 5], tgt: [0, 0.5, 0] },
+    /* 14 Switch Over */ { state: 'switch', cam: [0, 1.5, 4], tgt: [0, 0.5, 0] },
+    /* 15 Modules     */ { state: 'switch', cam: [1, 1.5, 5], tgt: [0, 0.5, 0] },
+    /* 16 MQTT        */ { state: 'switch', cam: [-1.5, 1, 4.5], tgt: [0, 0.5, 0] },
+    /* 17 Eng Decide  */ { state: 'switch', cam: [0, 2, 5], tgt: [0, 0.5, 0] },
+    /* 18 §Dollhouse  */ { state: 'dollhouse', cam: [3, 3.5, 5], tgt: [0, 0, 0] },
+    /* 19 DH Concept  */ { state: 'dollhouse', cam: [3, 4, 5], tgt: [0, 0, 0] },
+    /* 20 Scan Pipe   */ { state: 'dollhouse', cam: [2, 2, 4], tgt: [0, 0, 0] },
+    /* 21 Live Demo   */ { state: 'dollhouse', cam: [0, 2, 5], tgt: [0, 0, 0] },
+    /* 22 Next Steps  */ { state: 'closing', cam: [0, 2.5, 10], tgt: [0, 0.5, 0] },
+    /* 23 Timeline    */ { state: 'closing', cam: [0, 3, 10], tgt: [0, 0.5, 0] },
+    /* 24 Thank You   */ { state: 'closing', cam: [0, 3, 12], tgt: [0, 0.5, 0] },
 ];
 
 function transitionScene(newState) {
@@ -1096,17 +1130,17 @@ Reveal.on('slidechanged', event => {
     transitionScene(cfg.state);
     if (cfg.cam) moveCamera(cfg.cam, cfg.tgt);
 
-    // Hero moments
-    if (idx === 13) setTimeout(explodeSwitchBox, 1200);
-    if (idx === 8) setTimeout(() => pulseDevice(models.lamp, 0xffeedd), 800);
-    if (idx === 9) setTimeout(() => pulseDevice(models.tv, 0xaaddff), 800);
-    if (idx === 10) setTimeout(() => {
+    // Hero moments (indices shifted +1 for added Solution slide)
+    if (idx === 14) setTimeout(explodeSwitchBox, 1200);
+    if (idx === 9) setTimeout(() => pulseDevice(models.lamp, 0xffeedd), 800);
+    if (idx === 10) setTimeout(() => pulseDevice(models.tv, 0xaaddff), 800);
+    if (idx === 11) setTimeout(() => {
         pulseDevice(models.lamp, 0xffeedd);
         setTimeout(() => pulseDevice(models.tv, 0xaaddff), 300);
         setTimeout(() => pulseDevice(models.curtains, 0xddffdd), 600);
     }, 800);
-    if (idx === 19) setTimeout(dollhouseBuildAnim, 800);
-    if (idx === 21) setTimeout(startClosingOrbit, 800);
+    if (idx === 20) setTimeout(dollhouseBuildAnim, 800);
+    if (idx === 22) setTimeout(startClosingOrbit, 800);
 });
 
 // Trigger initial state
