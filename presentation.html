@@ -84,6 +84,9 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
 
 /* Glass cards */
 .glass { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px; padding: 32px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+/* Switch section: reduce glass opacity so 3D model is clearly visible behind */
+.switch-section .glass { background: rgba(10,10,10,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.switch-section::before { background: radial-gradient(ellipse at center, rgba(10,10,10,0.1) 0%, rgba(10,10,10,0.4) 100%) !important; }
 .glass h3 { font-size: 20px; margin-bottom: 10px; }
 .glass p { font-size: 15px; }
 .cards { display: flex; gap: 24px; margin-top: 32px; }
@@ -447,7 +450,7 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
     </section>
 
     <!-- ====== SLIDE 14: Switch Box Overview ====== -->
-    <section>
+    <section class="switch-section">
         <div class="sc padded">
             <h2>Switch Box Overview</h2>
             <p class="subtitle" style="margin-bottom:28px;">A modular ESP32-based enclosure that physically actuates existing wall switches via magnetic modules</p>
@@ -469,7 +472,7 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
     </section>
 
     <!-- ====== SLIDE 15: Module Types ====== -->
-    <section>
+    <section class="switch-section">
         <div class="sc padded">
             <p class="label">HARDWARE</p>
             <h2>Switch Module Types</h2>
@@ -491,7 +494,7 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
     </section>
 
     <!-- ====== SLIDE 16: MQTT Pipeline ====== -->
-    <section>
+    <section class="switch-section">
         <div class="sc centered">
             <p class="label">COMMUNICATION</p>
             <h2>MQTT Pipeline</h2>
@@ -517,7 +520,7 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
     </section>
 
     <!-- ====== SLIDE 17: Engineering Decisions ====== -->
-    <section>
+    <section class="switch-section">
         <div class="sc padded">
             <p class="label">ENGINEERING</p>
             <h2>Key Design Decisions</h2>
@@ -874,12 +877,12 @@ async function loadModels() {
         models.lab = normalize(lab.scene, 3);
         models.switchBox = normalize(sw.scene, 3);
         // Apply a default material if 3MF parts lack color
-        const switchMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.3 });
+        const switchMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.4 });
         models.switchBox.traverse(child => {
             if (child.isMesh && (!child.material || child.material.color?.r === 1 && child.material.color?.g === 1 && child.material.color?.b === 1)) {
                 child.material = switchMat.clone();
                 // Vary color slightly per part for visual distinction
-                child.material.color.setHSL(0, 0, 0.3 + Math.random() * 0.4);
+                child.material.color.setHSL(0, 0, 0.5 + Math.random() * 0.35);
             }
         });
         models.phone = normalize(ph.scene, 2);
@@ -887,8 +890,14 @@ async function loadModels() {
         // Opening: AVP model loads progressively, show nothing initially
         // (AVP added to opening group once loaded in loadProgressiveModels)
 
-        // Switch section
+        // Switch section — bright lighting to stand out
         groups.switch.add(models.switchBox);
+        const swSpot1 = new THREE.SpotLight(0xffffff, 4, 20, 0.6, 0.5);
+        swSpot1.position.set(3, 5, 5); swSpot1.target = models.switchBox;
+        groups.switch.add(swSpot1); groups.switch.add(swSpot1.target);
+        const swSpot2 = new THREE.SpotLight(0xddeeff, 2, 20, 0.6, 0.5);
+        swSpot2.position.set(-3, 4, 3); swSpot2.target = models.switchBox;
+        groups.switch.add(swSpot2); groups.switch.add(swSpot2.target);
 
         // Dollhouse section: use Lab scan model
         const labClone1 = models.lab.clone();
@@ -1117,43 +1126,67 @@ function explodeSwitchBox() {
     });
     if (!parts.length) return;
 
-    // Compute center of all parts for explosion direction
-    const center = new THREE.Vector3();
-    const bbox = new THREE.Box3().setFromObject(models.switchBox);
-    bbox.getCenter(center);
+    // Find the PCB normal axis — the thinnest dimension of the bounding box
+    const localBbox = new THREE.Box3();
+    orig.forEach(o => localBbox.expandByPoint(o));
+    const size = localBbox.getSize(new THREE.Vector3());
+    const center = localBbox.getCenter(new THREE.Vector3());
 
-    // Scale stagger to fit all parts within ~2 seconds
-    const maxStagger = 2.0;
-    const stagger = parts.length > 1 ? maxStagger / parts.length : 0;
+    // Thinnest axis = PCB normal (the axis to explode along)
+    let axis = 'z';
+    if (size.x <= size.y && size.x <= size.z) axis = 'x';
+    else if (size.y <= size.x && size.y <= size.z) axis = 'y';
 
-    // Explode outward
+    // Get each part's position along the explosion axis, relative to center
+    const axisPositions = orig.map(o => o[axis] - center[axis]);
+
+    // Group parts into layers by quantizing their axis position
+    // Use ~20 layers for a nice spread
+    const axisMin = Math.min(...axisPositions);
+    const axisMax = Math.max(...axisPositions);
+    const axisRange = axisMax - axisMin || 1;
+    const numLayers = 20;
+
+    // Assign each part a layer index (0 to numLayers-1)
+    const layerIdx = axisPositions.map(p => {
+        const norm = (p - axisMin) / axisRange;
+        return Math.min(Math.floor(norm * numLayers), numLayers - 1);
+    });
+
+    // Explosion spread: how far apart layers separate (in local units)
+    // Use the largest dimension for spread, not the thin axis
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const spread = maxDim * 1.5;
+
+    // Animate each part along the normal axis only
+    // Parts in the same layer move together; layers spread outward from center
+    const maxStagger = 1.5;
+    const layerStagger = maxStagger / numLayers;
+
     parts.forEach((part, i) => {
-        // Get world position of the part for proper direction calc
-        const worldPos = new THREE.Vector3();
-        part.getWorldPosition(worldPos);
-        const dir = new THREE.Vector3().subVectors(worldPos, center);
-        if (dir.length() < 0.01) dir.set(Math.sin(i * 2.39), Math.cos(i * 2.39), 0.5);
-        dir.normalize();
-        const dist = 2.0 + Math.random() * 1.0;
+        const layer = layerIdx[i];
+        // Offset: layer position remapped from [0,numLayers-1] to [-spread/2, +spread/2]
+        const layerOffset = ((layer / (numLayers - 1)) - 0.5) * spread;
+        const target = {};
+        target[axis] = orig[i][axis] + layerOffset;
         gsap.to(part.position, {
-            x: orig[i].x + dir.x * dist,
-            y: orig[i].y + dir.y * dist,
-            z: orig[i].z + dir.z * dist,
-            duration: 1.5, delay: i * stagger, ease: 'back.out(1.2)'
+            ...target,
+            duration: 1.5, delay: layer * layerStagger, ease: 'power2.out'
         });
     });
 
     // Reassemble after hold
     setTimeout(() => {
-        const reassembleStagger = parts.length > 1 ? 1.5 / parts.length : 0;
         parts.forEach((part, i) => {
+            const target = {};
+            target[axis] = orig[i][axis];
             gsap.to(part.position, {
-                x: orig[i].x, y: orig[i].y, z: orig[i].z,
-                duration: 1.0, delay: i * reassembleStagger, ease: 'power3.inOut'
+                ...target,
+                duration: 1.2, delay: 0, ease: 'power3.inOut'
             });
         });
         setTimeout(() => { switchExploded = false; }, 3000);
-    }, 5000);
+    }, 5500);
 }
 
 // --- Hero 2: Device Emissive Pulse ---
@@ -1227,7 +1260,7 @@ const slideMap = [
     /* 11 Power       */ { state: 'room', cam: [5, 1.5, 5], tgt: [7, 0.3, 0] },
     /* 12 UI Improve  */ { state: 'room', cam: [0, 3, 16], tgt: [0, 0.5, 0] },
     /* 13 §Switch     */ { state: 'switch', cam: [0, 1.5, 5], tgt: [0, 0.5, 0] },
-    /* 14 Switch Over */ { state: 'switch', cam: [0, 1.5, 4], tgt: [0, 0.5, 0] },
+    /* 14 Switch Over */ { state: 'switch', cam: [7, 3, 6], tgt: [0, 0.5, 0] },
     /* 15 Modules     */ { state: 'switch', cam: [1, 1.5, 5], tgt: [0, 0.5, 0] },
     /* 16 MQTT        */ { state: 'switch', cam: [-1.5, 1, 4.5], tgt: [0, 0.5, 0] },
     /* 17 Eng Decide  */ { state: 'switch', cam: [0, 2, 5], tgt: [0, 0.5, 0] },
