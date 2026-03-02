@@ -931,43 +931,43 @@ function createModeUI(type, personModel) {
     const s = h / 3; // scale factor (assuming ~3 unit normalized height)
 
     if (type === 'touch') {
-        // Panels right at the fingertips — close, within reach
+        // Panels at RIGHT hand fingertip height (raised up, shifted right, in front)
         const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMat);
-        panel.position.set(0.8 * s, 0.4 * s, 0.6 * s);
+        panel.position.set(1.2 * s, 0.8 * s, 1.2 * s);
         panel.rotation.y = -0.3;
         uiGroup.add(panel);
-        // Second smaller panel slightly below
+        // Second smaller panel slightly below-right
         const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(0.6 * s, 0.4 * s), panelMatAlt);
-        panel2.position.set(0.9 * s, -0.1 * s, 0.5 * s);
+        panel2.position.set(1.4 * s, 0.5 * s, 1.0 * s);
         panel2.rotation.y = -0.4;
         uiGroup.add(panel2);
-        // Fingertip glow dots — touch contact points
+        // Fingertip glow dots at the right-hand finger area
         const glowMat = new THREE.MeshStandardMaterial({
             color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 1.0,
             transparent: true, opacity: 0.9
         });
-        [[0.75 * s, 0.35 * s, 0.65 * s], [0.85 * s, 0.25 * s, 0.6 * s], [0.7 * s, 0.15 * s, 0.55 * s]].forEach(p => {
+        [[1.0 * s, 0.75 * s, 1.15 * s], [1.15 * s, 0.65 * s, 1.1 * s], [1.05 * s, 0.55 * s, 1.05 * s]].forEach(p => {
             const dot = new THREE.Mesh(new THREE.SphereGeometry(0.06 * s, 12, 12), glowMat);
             dot.position.set(...p);
             uiGroup.add(dot);
         });
     } else if (type === 'natural') {
-        // Panels at a distance — gaze + voice controlled
+        // Panels at a distance IN FRONT (+Z), raised slightly
         const panel1 = new THREE.Mesh(new THREE.PlaneGeometry(1.6 * s, 1.0 * s), panelMat);
-        panel1.position.set(0, 0.3 * s, -3.0 * s); uiGroup.add(panel1);
+        panel1.position.set(0.3 * s, 0.6 * s, 3.0 * s); uiGroup.add(panel1);
         const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMatAlt);
-        panel2.position.set(-2.0 * s, 0.1 * s, -2.4 * s); panel2.rotation.y = 0.4; uiGroup.add(panel2);
+        panel2.position.set(-1.5 * s, 0.4 * s, 2.5 * s); panel2.rotation.y = -0.4; uiGroup.add(panel2);
         const panel3 = new THREE.Mesh(new THREE.PlaneGeometry(0.8 * s, 0.6 * s), panelMatAlt);
-        panel3.position.set(2.0 * s, 0.5 * s, -2.6 * s); panel3.rotation.y = -0.3; uiGroup.add(panel3);
-        // Gaze ray from eye level to main panel
+        panel3.position.set(1.8 * s, 0.8 * s, 2.6 * s); panel3.rotation.y = 0.3; uiGroup.add(panel3);
+        // Gaze ray from eye level forward to main panel
         const rayMat = new THREE.MeshStandardMaterial({
             color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.8,
             transparent: true, opacity: 0.35
         });
         const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015 * s, 0.015 * s, 3.0 * s, 8), rayMat);
-        ray.position.set(0, 0.45 * s, -1.5 * s); ray.rotation.x = Math.PI / 2;
+        ray.position.set(0.15 * s, 0.6 * s, 1.5 * s); ray.rotation.x = Math.PI / 2;
         uiGroup.add(ray);
-        // Voice wave arcs emanating forward
+        // Voice wave arcs emanating forward from mouth area
         for (let i = 0; i < 3; i++) {
             const wave = new THREE.Mesh(
                 new THREE.TorusGeometry((0.4 + i * 0.25) * s, 0.02 * s, 8, 24, Math.PI),
@@ -976,31 +976,30 @@ function createModeUI(type, personModel) {
                     transparent: true, opacity: 0.5 - i * 0.12
                 })
             );
-            wave.position.set(0, -0.1 * s, 0.5 * s + i * 0.2 * s);
-            wave.rotation.y = Math.PI;
+            wave.position.set(0, 0.2 * s, 1.0 * s + i * 0.3 * s);
+            wave.rotation.x = -Math.PI / 2; // face forward along Z
             uiGroup.add(wave);
         }
     } else if (type === 'power') {
-        // Panels in hands + connected to distant panels
-        // Close hand panels
+        // Hand panels at CHEST height, in front
         const handL = new THREE.Mesh(new THREE.PlaneGeometry(0.7 * s, 0.5 * s), panelMat);
-        handL.position.set(-0.7 * s, 0.0, 0.5 * s); handL.rotation.y = 0.3;
+        handL.position.set(-0.7 * s, 0.5 * s, 0.8 * s); handL.rotation.y = 0.3;
         uiGroup.add(handL);
         const handR = new THREE.Mesh(new THREE.PlaneGeometry(0.7 * s, 0.5 * s), panelMat);
-        handR.position.set(0.7 * s, 0.0, 0.5 * s); handR.rotation.y = -0.3;
+        handR.position.set(0.7 * s, 0.5 * s, 0.8 * s); handR.rotation.y = -0.3;
         uiGroup.add(handR);
-        // Distant connected panels
+        // Distant panels IN FRONT and around, connected back to hands
         const farPositions = [
-            [2.5 * s, 1.2 * s, -1.5 * s], [-2.5 * s, 1.0 * s, -1.5 * s],
-            [1.5 * s, -0.5 * s, -2.5 * s], [-1.5 * s, 1.5 * s, -2.0 * s],
-            [0, 1.8 * s, -2.0 * s], [3.0 * s, 0.0, -0.5 * s],
+            [2.5 * s, 1.2 * s, 2.0 * s], [-2.5 * s, 1.0 * s, 2.0 * s],
+            [1.5 * s, 0.0, 3.0 * s], [-1.5 * s, 1.5 * s, 2.5 * s],
+            [0, 1.8 * s, 2.5 * s], [3.0 * s, 0.3 * s, 1.0 * s],
         ];
         farPositions.forEach((p, i) => {
             const size = (0.5 + Math.random() * 0.4) * s;
             const mat = i % 2 === 0 ? panelMat.clone() : panelMatAlt.clone();
             const panel = new THREE.Mesh(new THREE.PlaneGeometry(size, size * 0.7), mat);
             panel.position.set(...p);
-            panel.lookAt(0, 0.3 * s, 0);
+            panel.lookAt(0, 0.5 * s, 0);
             uiGroup.add(panel);
         });
         // Connection lines from hands to distant panels
@@ -1009,8 +1008,8 @@ function createModeUI(type, personModel) {
             transparent: true, opacity: 0.3
         });
         const handPositions = [
-            new THREE.Vector3(-0.7 * s, 0.0, 0.5 * s),
-            new THREE.Vector3(0.7 * s, 0.0, 0.5 * s)
+            new THREE.Vector3(-0.7 * s, 0.5 * s, 0.8 * s),
+            new THREE.Vector3(0.7 * s, 0.5 * s, 0.8 * s)
         ];
         farPositions.forEach((fp, i) => {
             const hand = handPositions[i % 2];
@@ -1032,7 +1031,9 @@ async function loadProgressiveModels() {
     try {
         const avp = await gltf.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
         models.avp = normalize(avp.scene, 3);
-        groups.opening.add(models.avp.clone());
+        const avpOpening = models.avp.clone();
+        avpOpening.position.set(2, 6.5, -1); // upper-right, well above slide text
+        groups.opening.add(avpOpening);
         console.log('AVP model loaded → opening group');
     } catch (e) { console.warn('AVP load failed:', e); }
 
@@ -1052,19 +1053,19 @@ async function loadProgressiveModels() {
         const touchGroup = new THREE.Group();
         touchGroup.add(models.avpPersonTouch);
         touchGroup.add(createModeUI('touch', models.avpPersonTouch));
-        touchGroup.position.set(-4, -0.5, -1);
+        touchGroup.position.set(-7, -0.5, 0);
         touchGroup.userData.slowSpin = true;
 
         const naturalGroup = new THREE.Group();
         naturalGroup.add(models.avpPersonNatural);
         naturalGroup.add(createModeUI('natural', models.avpPersonNatural));
-        naturalGroup.position.set(0, -0.5, -1);
+        naturalGroup.position.set(0, -0.5, 0);
         naturalGroup.userData.slowSpin = true;
 
         const powerGroup = new THREE.Group();
         powerGroup.add(models.avpPersonPower);
         powerGroup.add(createModeUI('power', models.avpPersonPower));
-        powerGroup.position.set(4, -0.5, -1);
+        powerGroup.position.set(7, -0.5, 0);
         powerGroup.userData.slowSpin = true;
 
         // Store groups for visibility toggling
@@ -1078,7 +1079,7 @@ async function loadProgressiveModels() {
         groups.room.add(touchGroup, naturalGroup, powerGroup);
 
         // Spotlights on each person
-        [[-4, 0, -1], [0, 0, -1], [4, 0, -1]].forEach(tgt => {
+        [[-7, 0, 0], [0, 0, 0], [7, 0, 0]].forEach(tgt => {
             const sp = new THREE.SpotLight(0xeeeeff, 3, 12, 0.5, 0.7);
             sp.position.set(tgt[0], 5, tgt[2] + 3);
             sp.target.position.set(...tgt);
@@ -1192,17 +1193,17 @@ let idleEnabled = true;
 const slideMap = [
     /* 0  Hook        */ { state: 'none' },
     /* 1  Phone Demo  */ { state: 'none' },
-    /* 2  Intro SMART */ { state: 'opening', cam: [0, 2, 7], tgt: [0, 0.3, 0] },
-    /* 3  Team        */ { state: 'opening', cam: [2, 2.5, 6], tgt: [0, 0.3, 0] },
-    /* 4  Problem     */ { state: 'opening', cam: [-1, 2, 7], tgt: [0, 0.5, 0] },
-    /* 5  Solution    */ { state: 'opening', cam: [0, 2, 6], tgt: [0, 0.5, 0] },
-    /* 6  Arch        */ { state: 'opening', cam: [0, 1.5, 8], tgt: [0, 0.5, 0] },
-    /* 7  §AVP Modes  */ { state: 'room', cam: [0, 2.5, 10], tgt: [0, 0.5, -1] },
-    /* 8  3 Modes     */ { state: 'room', cam: [0, 2, 8], tgt: [0, 0.5, -1] },
-    /* 9  Touch       */ { state: 'room', cam: [-3.5, 1.5, 3], tgt: [-4, 0.3, -1] },
-    /* 10 Natural     */ { state: 'room', cam: [0.5, 1.5, 3], tgt: [0, 0.3, -1] },
-    /* 11 Power       */ { state: 'room', cam: [4.5, 1.5, 3], tgt: [4, 0.3, -1] },
-    /* 12 UI Improve  */ { state: 'room', cam: [0, 3, 11], tgt: [0, 0.5, -1] },
+    /* 2  Intro SMART */ { state: 'opening', cam: [0, 5, 9], tgt: [2, 5.5, -1] },
+    /* 3  Team        */ { state: 'opening', cam: [3, 5.5, 8], tgt: [2, 5.5, -1] },
+    /* 4  Problem     */ { state: 'opening', cam: [-1, 5, 9], tgt: [2, 5.5, -1] },
+    /* 5  Solution    */ { state: 'opening', cam: [0, 5, 8], tgt: [2, 5.5, -1] },
+    /* 6  Arch        */ { state: 'opening', cam: [0, 4.5, 10], tgt: [2, 5.5, -1] },
+    /* 7  §AVP Modes  */ { state: 'room', cam: [0, 3, 16], tgt: [0, 0.5, 0] },
+    /* 8  3 Modes     */ { state: 'room', cam: [0, 2.5, 14], tgt: [0, 0.5, 0] },
+    /* 9  Touch       */ { state: 'room', cam: [-5, 1.5, 5], tgt: [-7, 0.3, 0] },
+    /* 10 Natural     */ { state: 'room', cam: [1, 1.5, 5], tgt: [0, 0.3, 0] },
+    /* 11 Power       */ { state: 'room', cam: [5, 1.5, 5], tgt: [7, 0.3, 0] },
+    /* 12 UI Improve  */ { state: 'room', cam: [0, 3, 16], tgt: [0, 0.5, 0] },
     /* 13 §Switch     */ { state: 'switch', cam: [0, 1.5, 5], tgt: [0, 0.5, 0] },
     /* 14 Switch Over */ { state: 'switch', cam: [0, 1.5, 4], tgt: [0, 0.5, 0] },
     /* 15 Modules     */ { state: 'switch', cam: [1, 1.5, 5], tgt: [0, 0.5, 0] },
