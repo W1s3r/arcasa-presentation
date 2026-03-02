@@ -912,60 +912,8 @@ function buildRoom() {
     spot2.position.set(4, 6, 2); spot2.target.position.set(4, 0, -2); g.add(spot2, spot2.target);
 }
 
-// --- Build a "person wearing AVP" composite for the modes section ---
-function buildAVPPerson(avpModel) {
-    const person = new THREE.Group();
-
-    // Lighter mannequin materials - visible against dark background
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x99aabb, roughness: 0.5, metalness: 0.15 });
-
-    // Stylized bust from primitives
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 32, 32), headMat);
-    head.position.y = 0.9;
-    head.scale.set(1, 1.15, 1);
-    person.add(head);
-
-    // Neck
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.35, 16), headMat);
-    neck.position.y = 0.28;
-    person.add(neck);
-
-    // Shoulders & torso - slightly darker than head but still visible
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x667788, roughness: 0.7, metalness: 0.1 });
-    const shoulders = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.55, 0.5, 16), bodyMat);
-    shoulders.position.y = -0.05;
-    person.add(shoulders);
-
-    // Torso
-    const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.45, 0.8, 16), bodyMat);
-    torso.position.y = -0.5;
-    person.add(torso);
-
-    // Place AVP headset on the head using a wrapper group
-    const avpClone = avpModel.clone();
-    const avpWrapper = new THREE.Group();
-    avpWrapper.add(avpClone);
-
-    const avpBox = new THREE.Box3().setFromObject(avpClone);
-    const avpSize = avpBox.getSize(new THREE.Vector3());
-    const avpCenter = avpBox.getCenter(new THREE.Vector3());
-    // Target width ~1.4 to sit around the 1.1-wide head naturally
-    const headsetScale = 1.4 / Math.max(avpSize.x, avpSize.y, avpSize.z);
-    avpWrapper.scale.setScalar(headsetScale);
-    // Center on the head sphere (y=0.9), nudge forward slightly
-    avpWrapper.position.set(
-        -avpCenter.x * headsetScale,
-        0.9 - avpCenter.y * headsetScale,
-        -avpCenter.z * headsetScale + 0.15
-    );
-    person.add(avpWrapper);
-
-    person.userData.slowSpin = true; // rotate gently on mode slides
-    return person;
-}
-
 // Create floating UI elements for each interaction mode
-function createModeUI(type) {
+function createModeUI(type, personModel) {
     const uiGroup = new THREE.Group();
     const panelMat = new THREE.MeshStandardMaterial({
         color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 0.3,
@@ -976,127 +924,169 @@ function createModeUI(type) {
         transparent: true, opacity: 0.5, side: THREE.DoubleSide
     });
 
+    // Get model bounding box to scale UI relative to the person
+    const bbox = new THREE.Box3().setFromObject(personModel);
+    const sz = bbox.getSize(new THREE.Vector3());
+    const h = sz.y; // person height for reference
+    const s = h / 3; // scale factor (assuming ~3 unit normalized height)
+
     if (type === 'touch') {
-        // Single large panel nearby — simple, accessible
-        const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.85), panelMat);
-        panel.position.set(2.0, 0.8, 0.5);
-        panel.rotation.y = -0.4;
+        // Panels right at the fingertips — close, within reach
+        const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMat);
+        panel.position.set(0.8 * s, 0.4 * s, 0.6 * s);
+        panel.rotation.y = -0.3;
         uiGroup.add(panel);
-        // Hand indicator sphere near panel
-        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16),
-            new THREE.MeshStandardMaterial({ color: 0xffeedd, emissive: 0xffeedd, emissiveIntensity: 0.5 }));
-        hand.position.set(1.6, 0.5, 0.7);
-        uiGroup.add(hand);
+        // Second smaller panel slightly below
+        const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(0.6 * s, 0.4 * s), panelMatAlt);
+        panel2.position.set(0.9 * s, -0.1 * s, 0.5 * s);
+        panel2.rotation.y = -0.4;
+        uiGroup.add(panel2);
+        // Fingertip glow dots — touch contact points
+        const glowMat = new THREE.MeshStandardMaterial({
+            color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 1.0,
+            transparent: true, opacity: 0.9
+        });
+        [[0.75 * s, 0.35 * s, 0.65 * s], [0.85 * s, 0.25 * s, 0.6 * s], [0.7 * s, 0.15 * s, 0.55 * s]].forEach(p => {
+            const dot = new THREE.Mesh(new THREE.SphereGeometry(0.06 * s, 12, 12), glowMat);
+            dot.position.set(...p);
+            uiGroup.add(dot);
+        });
     } else if (type === 'natural') {
-        // Floating panels + gaze ray + voice waves
-        const panel1 = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.9), panelMat);
-        panel1.position.set(0, 1.0, -2.5); uiGroup.add(panel1);
-        const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.7), panelMatAlt);
-        panel2.position.set(-1.8, 0.7, -1.8); panel2.rotation.y = 0.5; uiGroup.add(panel2);
-        // Gaze ray
+        // Panels at a distance — gaze + voice controlled
+        const panel1 = new THREE.Mesh(new THREE.PlaneGeometry(1.6 * s, 1.0 * s), panelMat);
+        panel1.position.set(0, 0.3 * s, -3.0 * s); uiGroup.add(panel1);
+        const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMatAlt);
+        panel2.position.set(-2.0 * s, 0.1 * s, -2.4 * s); panel2.rotation.y = 0.4; uiGroup.add(panel2);
+        const panel3 = new THREE.Mesh(new THREE.PlaneGeometry(0.8 * s, 0.6 * s), panelMatAlt);
+        panel3.position.set(2.0 * s, 0.5 * s, -2.6 * s); panel3.rotation.y = -0.3; uiGroup.add(panel3);
+        // Gaze ray from eye level to main panel
         const rayMat = new THREE.MeshStandardMaterial({
             color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.8,
-            transparent: true, opacity: 0.4
+            transparent: true, opacity: 0.35
         });
-        const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.5, 8), rayMat);
-        ray.position.set(0, 0.95, -1.2); ray.rotation.x = Math.PI / 2;
+        const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015 * s, 0.015 * s, 3.0 * s, 8), rayMat);
+        ray.position.set(0, 0.45 * s, -1.5 * s); ray.rotation.x = Math.PI / 2;
         uiGroup.add(ray);
-        // Voice waves
+        // Voice wave arcs emanating forward
         for (let i = 0; i < 3; i++) {
             const wave = new THREE.Mesh(
-                new THREE.TorusGeometry(0.35 + i * 0.2, 0.02, 8, 24, Math.PI),
+                new THREE.TorusGeometry((0.4 + i * 0.25) * s, 0.02 * s, 8, 24, Math.PI),
                 new THREE.MeshStandardMaterial({
                     color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.5,
-                    transparent: true, opacity: 0.6 - i * 0.15
+                    transparent: true, opacity: 0.5 - i * 0.12
                 })
             );
-            wave.position.set(0, 0.5, 0.6 + i * 0.15);
+            wave.position.set(0, -0.1 * s, 0.5 * s + i * 0.2 * s);
             wave.rotation.y = Math.PI;
             uiGroup.add(wave);
         }
     } else if (type === 'power') {
-        // Dense constellation of large panels all around
-        const positions = [
-            [2.2, 1.4, -0.5], [-2.0, 1.5, -0.7], [1.0, 0.2, -2.2],
-            [-1.5, 0.3, -1.8], [0, 1.8, -1.5], [2.3, 0.6, 0.5],
-            [-2.2, 0.9, 0.5], [0.6, -0.2, 1.8]
+        // Panels in hands + connected to distant panels
+        // Close hand panels
+        const handL = new THREE.Mesh(new THREE.PlaneGeometry(0.7 * s, 0.5 * s), panelMat);
+        handL.position.set(-0.7 * s, 0.0, 0.5 * s); handL.rotation.y = 0.3;
+        uiGroup.add(handL);
+        const handR = new THREE.Mesh(new THREE.PlaneGeometry(0.7 * s, 0.5 * s), panelMat);
+        handR.position.set(0.7 * s, 0.0, 0.5 * s); handR.rotation.y = -0.3;
+        uiGroup.add(handR);
+        // Distant connected panels
+        const farPositions = [
+            [2.5 * s, 1.2 * s, -1.5 * s], [-2.5 * s, 1.0 * s, -1.5 * s],
+            [1.5 * s, -0.5 * s, -2.5 * s], [-1.5 * s, 1.5 * s, -2.0 * s],
+            [0, 1.8 * s, -2.0 * s], [3.0 * s, 0.0, -0.5 * s],
         ];
-        positions.forEach((p, i) => {
-            const size = 0.6 + Math.random() * 0.5;
+        farPositions.forEach((p, i) => {
+            const size = (0.5 + Math.random() * 0.4) * s;
             const mat = i % 2 === 0 ? panelMat.clone() : panelMatAlt.clone();
             const panel = new THREE.Mesh(new THREE.PlaneGeometry(size, size * 0.7), mat);
-            panel.position.set(p[0], p[1], p[2]);
-            panel.lookAt(0, 0.9, 0);
+            panel.position.set(...p);
+            panel.lookAt(0, 0.3 * s, 0);
             uiGroup.add(panel);
         });
-        // Connection lines
+        // Connection lines from hands to distant panels
         const lineMat = new THREE.MeshStandardMaterial({
             color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.6,
             transparent: true, opacity: 0.3
         });
-        for (let i = 0; i < positions.length - 1; i++) {
-            const a = new THREE.Vector3(...positions[i]);
-            const b = new THREE.Vector3(...positions[i + 1]);
-            const mid = a.clone().add(b).multiplyScalar(0.5);
-            const len = a.distanceTo(b);
-            const line = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, len, 4), lineMat);
+        const handPositions = [
+            new THREE.Vector3(-0.7 * s, 0.0, 0.5 * s),
+            new THREE.Vector3(0.7 * s, 0.0, 0.5 * s)
+        ];
+        farPositions.forEach((fp, i) => {
+            const hand = handPositions[i % 2];
+            const far = new THREE.Vector3(...fp);
+            const mid = hand.clone().add(far).multiplyScalar(0.5);
+            const len = hand.distanceTo(far);
+            const line = new THREE.Mesh(new THREE.CylinderGeometry(0.012 * s, 0.012 * s, len, 4), lineMat);
             line.position.copy(mid);
-            line.lookAt(b);
+            line.lookAt(far);
             line.rotateX(Math.PI / 2);
             uiGroup.add(line);
-        }
+        });
     }
     return uiGroup;
 }
 
 async function loadProgressiveModels() {
-    // AVP headset (heavy) — used for opening hero + person composite
+    // AVP headset for opening hero
     try {
         const avp = await gltf.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
         models.avp = normalize(avp.scene, 3);
-        // Add to opening group as the hero rotating model
         groups.opening.add(models.avp.clone());
         console.log('AVP model loaded → opening group');
+    } catch (e) { console.warn('AVP load failed:', e); }
 
-        // Build person-wearing-AVP composites for mode slides
-        models.avpPersonTouch = buildAVPPerson(models.avp);
-        models.avpPersonNatural = buildAVPPerson(models.avp);
-        models.avpPersonPower = buildAVPPerson(models.avp);
+    // Load 3 person-with-AVP models for mode slides
+    try {
+        const [touchGlb, naturalGlb, powerGlb] = await Promise.all([
+            gltf.loadAsync('assets/models/TouchMode.glb'),
+            gltf.loadAsync('assets/models/NaturalMode.glb'),
+            gltf.loadAsync('assets/models/PowerMode.glb'),
+        ]);
 
-        // Position 3 persons across the room: left, center, right
-        const touchUI = createModeUI('touch');
-        models.avpPersonTouch.add(touchUI);
-        models.avpPersonTouch.position.set(-4, -0.5, -1); // LEFT
+        models.avpPersonTouch = normalize(touchGlb.scene, 3.5);
+        models.avpPersonNatural = normalize(naturalGlb.scene, 3.5);
+        models.avpPersonPower = normalize(powerGlb.scene, 3.5);
 
-        const naturalUI = createModeUI('natural');
-        models.avpPersonNatural.add(naturalUI);
-        models.avpPersonNatural.position.set(0, -0.5, -1); // CENTER
+        // Wrap each in a group so UI elements are in the same coordinate space
+        const touchGroup = new THREE.Group();
+        touchGroup.add(models.avpPersonTouch);
+        touchGroup.add(createModeUI('touch', models.avpPersonTouch));
+        touchGroup.position.set(-4, -0.5, -1);
+        touchGroup.userData.slowSpin = true;
 
-        const powerUI = createModeUI('power');
-        models.avpPersonPower.add(powerUI);
-        models.avpPersonPower.position.set(4, -0.5, -1); // RIGHT
+        const naturalGroup = new THREE.Group();
+        naturalGroup.add(models.avpPersonNatural);
+        naturalGroup.add(createModeUI('natural', models.avpPersonNatural));
+        naturalGroup.position.set(0, -0.5, -1);
+        naturalGroup.userData.slowSpin = true;
 
-        // All start hidden, shown together during modes section
-        models.avpPersonTouch.visible = false;
-        models.avpPersonNatural.visible = false;
-        models.avpPersonPower.visible = false;
-        groups.room.add(models.avpPersonTouch, models.avpPersonNatural, models.avpPersonPower);
+        const powerGroup = new THREE.Group();
+        powerGroup.add(models.avpPersonPower);
+        powerGroup.add(createModeUI('power', models.avpPersonPower));
+        powerGroup.position.set(4, -0.5, -1);
+        powerGroup.userData.slowSpin = true;
 
-        // Add a spotlight for each person so they're well-lit
-        const personSpots = [
-            { pos: [-4, 5, 2], target: [-4, 0, -1] },
-            { pos: [0, 5, 2], target: [0, 0, -1] },
-            { pos: [4, 5, 2], target: [4, 0, -1] },
-        ];
-        personSpots.forEach(s => {
+        // Store groups for visibility toggling
+        models.avpPersonTouch = touchGroup;
+        models.avpPersonNatural = naturalGroup;
+        models.avpPersonPower = powerGroup;
+
+        touchGroup.visible = false;
+        naturalGroup.visible = false;
+        powerGroup.visible = false;
+        groups.room.add(touchGroup, naturalGroup, powerGroup);
+
+        // Spotlights on each person
+        [[-4, 0, -1], [0, 0, -1], [4, 0, -1]].forEach(tgt => {
             const sp = new THREE.SpotLight(0xeeeeff, 3, 12, 0.5, 0.7);
-            sp.position.set(...s.pos);
-            sp.target.position.set(...s.target);
+            sp.position.set(tgt[0], 5, tgt[2] + 3);
+            sp.target.position.set(...tgt);
             groups.room.add(sp, sp.target);
         });
 
-        console.log('AVP person composites built for 3 modes');
-    } catch (e) { console.warn('AVP load failed:', e); }
+        console.log('Mode person models loaded (TouchMode, NaturalMode, PowerMode)');
+    } catch (e) { console.warn('Mode person models failed:', e); }
 }
 
 loadModels();
