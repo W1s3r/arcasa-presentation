@@ -953,20 +953,24 @@ function buildAVPPerson(avpModel) {
     torso.position.y = -0.5;
     person.add(torso);
 
-    // Place AVP headset on the head
+    // Place AVP headset on the head using a wrapper group
+    // (clone keeps its normalize scale; wrapper applies additional scaling)
     const avpClone = avpModel.clone();
-    // Reset and re-normalize for head placement
+    const avpWrapper = new THREE.Group();
+    avpWrapper.add(avpClone);
+
     const avpBox = new THREE.Box3().setFromObject(avpClone);
     const avpSize = avpBox.getSize(new THREE.Vector3());
     const avpCenter = avpBox.getCenter(new THREE.Vector3());
     const headsetScale = 1.1 / Math.max(avpSize.x, avpSize.y, avpSize.z);
-    avpClone.scale.setScalar(headsetScale);
-    avpClone.position.set(
+    avpWrapper.scale.setScalar(headsetScale);
+    avpWrapper.position.set(
         -avpCenter.x * headsetScale,
         0.95 - avpCenter.y * headsetScale,
         -avpCenter.z * headsetScale + 0.05
     );
-    person.add(avpClone);
+    person.add(avpWrapper);
+    console.log('AVP on head — bbox size:', avpSize, 'headsetScale:', headsetScale);
 
     person.userData.noSpin = true; // don't auto-rotate
     return person;
