@@ -1,0 +1,14 @@
+.DS_Store
+~$*
+*.tmp
+assets/images/pptx/media/model3d3.glb
+assets/images/pptx/media/model3d4.glb
+assets/images/pptx/media/model3d8.glb
+assets/images/pptx/media/model3d13.glb
+assets/images/pptx/media/model3d14.glb
+assets/images/pptx/media/model3d2.glb
+assets/images/pptx/media/model3d10.glb
+assets/images/pptx/media/model3d12.glb
+assets/images/screenshots/
+assets/images/revealjs_screenshots/
+assets/images/pptx/media/hdphoto*

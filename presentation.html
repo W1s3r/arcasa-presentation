@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcasa — Progress Review</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+:root {
+    --bg: #0a0a0a;
+    --text: #ffffff;
+    --text2: #999;
+    --accent: #6366f1;
+    --accent2: #8b5cf6;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+    --r-background-color: transparent;
+    --r-main-font: 'Inter', sans-serif;
+    --r-heading-font: 'Montserrat', sans-serif;
+    --r-main-color: #fff;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); overflow: hidden; }
+#three-canvas {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+}
+#phone-canvas {
+    position: fixed; top: 0; left: 0; width: 50vw; height: 100vh;
+    z-index: 10; pointer-events: none; opacity: 0; transition: opacity 0.5s;
+}
+#phone-canvas.visible { opacity: 1; }
+#bulb-overlay {
+    position: fixed; top: 10%; left: 50%; transform: translateX(-50%);
+    width: 7vw; z-index: 10; pointer-events: none; opacity: 0; transition: opacity 0.5s;
+}
+#bulb-overlay.visible { opacity: 1; }
+#bulb-overlay img { width: 100%; display: block; }
+#bulb-overlay .bulb-on { display: none; }
+#bulb-overlay.lit .bulb-off { display: none; }
+#bulb-overlay.lit .bulb-on { display: block; }
+#text-overlay {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    font-family: 'Inter', sans-serif; font-size: 2.6vw; font-weight: 300;
+    color: #ccc; line-height: 1.4; width: 40vw; z-index: 100;
+    pointer-events: none; text-align: center; transition: opacity 0.5s;
+}
+#text-overlay.hidden { opacity: 0; }
+#text-overlay .word { display: inline-block; white-space: nowrap; }
+#text-overlay .char { display: inline-block; visibility: hidden; transition: transform 1s ease-in-out; }
+#text-overlay .char.visible { visibility: visible; }
+#three-labels {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 5; pointer-events: none;
+}
+.reveal { background: transparent !important; z-index: 1; }
+.reveal .slides section::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(10,10,10,0.3) 0%, rgba(10,10,10,0.7) 100%);
+}
+.reveal .slides { text-align: left; }
+.reveal .slides section { height: 100%; }
+.reveal .slide-number { display: none; }
+.reveal .progress { height: 3px; }
+.reveal .progress span { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.reveal .controls { color: rgba(255,255,255,0.3); }
+
+/* Slide layouts */
+.sc { display: flex; flex-direction: column; justify-content: center; height: 100%; padding: 60px 80px; }
+.sc.centered { align-items: center; text-align: center; }
+.sc.padded { padding: 60px 100px; }
+
+/* Typography */
+h1 { font-family: 'Montserrat',sans-serif; font-weight: 700; font-size: 64px; color: var(--text); line-height: 1.1; margin-bottom: 16px; }
+h2 { font-family: 'Montserrat',sans-serif; font-weight: 600; font-size: 42px; color: var(--text); line-height: 1.2; margin-bottom: 12px; }
+h3 { font-family: 'Montserrat',sans-serif; font-weight: 600; font-size: 24px; color: var(--text); margin-bottom: 8px; }
+h4 { font-family: 'Inter',sans-serif; font-weight: 600; font-size: 18px; color: var(--text); margin-bottom: 6px; }
+p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; color: var(--text2); line-height: 1.6; }
+.label { font-family: 'Inter',sans-serif; font-weight: 500; font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+.subtitle { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 22px; color: var(--text2); max-width: 600px; }
+.hero-title { font-size: 96px; font-weight: 800; letter-spacing: -2px; background: linear-gradient(135deg, #fff 0%, #ccc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+/* Glass cards */
+.glass { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px; padding: 32px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.glass h3 { font-size: 20px; margin-bottom: 10px; }
+.glass p { font-size: 15px; }
+.cards { display: flex; gap: 24px; margin-top: 32px; }
+.cards .glass { flex: 1; }
+.cards-3 .glass { flex: 1; }
+
+/* Team grid */
+.team-grid { display: flex; gap: 32px; justify-content: center; margin-top: 48px; }
+.team-member { text-align: center; flex: 1; max-width: 180px; }
+.team-member img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); margin-bottom: 12px; filter: grayscale(0.2); }
+.team-member h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.team-member p { font-size: 12px; color: var(--text2); }
+.team-member.placeholder img { opacity: 0.3; }
+
+/* Architecture */
+.arch-row { display: flex; align-items: center; gap: 16px; margin-top: 32px; }
+.arch-arrow { color: var(--accent); font-size: 28px; font-weight: 300; }
+.arch-sub { margin-top: 20px; display: flex; justify-content: center; }
+.arch-sub .glass { max-width: 320px; }
+
+/* Section title */
+.section-title { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+.section-title h1 { font-size: 72px; margin-bottom: 20px; }
+.section-title .subtitle { max-width: 500px; }
+
+/* Mode/feature cards */
+.mode-cards { display: flex; gap: 28px; margin-top: 36px; }
+.mode-cards .glass { flex: 1; position: relative; overflow: hidden; }
+.mode-cards .glass::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.mode-num { font-family: 'Montserrat',sans-serif; font-weight: 800; font-size: 48px; color: rgba(255,255,255,0.06); position: absolute; top: 12px; right: 16px; }
+
+/* Detail slides */
+.split { display: flex; height: 100%; }
+.split-text { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 60px 80px; }
+.split-visual { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+.feature-list { list-style: none; margin-top: 24px; }
+.feature-list li { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 16px; }
+.feature-list li::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 12px; vertical-align: middle; }
+
+/* Pipeline */
+.pipeline { display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 40px; }
+.pipeline-node { text-align: center; }
+.pipeline-node .glass { padding: 20px 28px; min-width: 160px; }
+.pipeline-line { width: 60px; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); position: relative; }
+.pipeline-line::after { content: ''; position: absolute; right: -6px; top: -4px; border: 5px solid transparent; border-left-color: var(--accent2); }
+
+/* Next steps grid */
+.next-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 36px; }
+
+/* Timeline */
+.timeline-row { display: flex; gap: 24px; margin-top: 40px; }
+.timeline-item { flex: 1; position: relative; padding-top: 20px; }
+.timeline-item::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 1px; }
+.timeline-item h4 { color: var(--accent); margin-bottom: 8px; }
+
+/* Closing */
+.closing { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+.closing h1 { font-size: 120px; font-weight: 800; letter-spacing: -3px; background: linear-gradient(135deg, #fff, rgba(255,255,255,0.6)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.closing .tagline { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 24px; color: var(--text2); margin-top: 16px; }
+.closing .q { font-family: 'Montserrat',sans-serif; font-weight: 300; font-size: 36px; color: rgba(255,255,255,0.4); margin-top: 48px; }
+
+/* Reveal fragment overrides */
+.reveal .fragment { transition: all 0.4s ease; }
+.reveal .fragment.fade-up { transform: translateY(20px); }
+.reveal .fragment.fade-up.visible { transform: translateY(0); }
+
+/* Screenshot placeholder */
+.screenshot-placeholder {
+    background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.2); font-family: 'Inter',sans-serif; font-size: 14px;
+    min-height: 200px; width: 100%;
+}
+    </style>
+</head>
+<body>
+
+<canvas id="three-canvas"></canvas>
+<canvas id="phone-canvas"></canvas>
+<div id="bulb-overlay">
+    <img class="bulb-off" src="assets/images/bulb_off.png" alt="">
+    <img class="bulb-on" src="assets/images/bulb_on.png" alt="">
+</div>
+<div id="text-overlay"></div>
+<div id="three-labels"></div>
+
+<div class="reveal">
+<div class="slides">
+
+    <!-- ====== SLIDE 1: Hook ====== -->
+    <section>
+        <div class="sc centered">
+            <!-- Typewriter overlay handles content -->
+        </div>
+        <aside class="notes">~30s — Let typewriter finish. Pause. "Sound familiar?"</aside>
+    </section>
+
+    <!-- ====== SLIDE 2: Phone Demo ====== -->
+    <section>
+        <div class="sc" style="align-items:flex-end;padding-right:120px;">
+            <p class="label">THE STATUS QUO</p>
+            <h2 style="font-size:32px;max-width:400px;">Unlock phone. Find app. Scroll. Tap.</h2>
+            <p style="max-width:360px;margin-top:12px;">Every smart home interaction starts with pulling out your phone.</p>
+        </div>
+        <aside class="notes">~30s — Watch the phone animation. "This is how most people interact with their smart home today. What if there was a better way?"</aside>
+    </section>
+
+    <!-- ====== SLIDE 3: Introducing Arcasa ====== -->
+    <section>
+        <div class="sc centered">
+            <p class="label">INTRODUCING</p>
+            <h1 class="hero-title">ARCASA</h1>
+            <p class="subtitle">Spatial smart home control for Apple Vision Pro</p>
+        </div>
+        <aside class="notes">~20s — "This is Arcasa." Pause on the 3D dollhouse. "Control your entire home through spatial computing."</aside>
+    </section>
+
+    <!-- ====== SLIDE 4: The Project ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">CONTEXT</p>
+            <h2>The Project</h2>
+            <div class="cards cards-3" style="margin-top:32px;">
+                <div class="glass">
+                    <h3>Course</h3>
+                    <p>IDC &mdash; ENGE 4736<br>Interdisciplinary Capstone Design</p>
+                </div>
+                <div class="glass">
+                    <h3>Challenge</h3>
+                    <p>Smart home control is fragmented across dozens of apps and interfaces</p>
+                </div>
+                <div class="glass">
+                    <h3>Our Solution</h3>
+                    <p>A unified spatial interface on Apple Vision Pro with custom hardware integration</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 5: Meet the Team ====== -->
+    <section>
+        <div class="sc centered">
+            <p class="label">TEAM SMART</p>
+            <h2>Meet the Team</h2>
+            <div class="team-grid">
+                <div class="team-member fragment fade-up">
+                    <img src="assets/images/pptx/media/image13.jpeg" alt="Ethan">
+                    <h4>Ethan Spencer</h4>
+                    <p>AVP Developer &mdash; Lead</p>
+                </div>
+                <div class="team-member fragment fade-up">
+                    <img src="assets/images/pptx/media/image14.jpeg" alt="Youssef">
+                    <h4>Youssef Chebil</h4>
+                    <p>Electrical Designer</p>
+                </div>
+                <div class="team-member fragment fade-up">
+                    <img src="assets/images/pptx/media/image15.jpeg" alt="Max">
+                    <h4>Max Wilson</h4>
+                    <p>Mechanical Designer</p>
+                </div>
+                <div class="team-member fragment fade-up">
+                    <img src="assets/images/pptx/media/image16.png" alt="Justice">
+                    <h4>Justice Jackson</h4>
+                    <p>RoomPlan Developer</p>
+                </div>
+                <div class="team-member fragment fade-up placeholder">
+                    <img src="assets/images/pptx/media/image16.png" alt="Soham" style="filter:brightness(0.3) grayscale(1);">
+                    <h4>Soham Nawthale</h4>
+                    <p>Backend Developer</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 6: Architecture ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">SYSTEM DESIGN</p>
+            <h2>Architecture</h2>
+            <div class="arch-row">
+                <div class="glass" style="flex:1;">
+                    <h3>Vision Pro App</h3>
+                    <p>Spatial UI, 3 interaction modes, real-time device control via SwiftUI + RealityKit</p>
+                </div>
+                <div class="arch-arrow">&rarr;</div>
+                <div class="glass" style="flex:1;">
+                    <h3>Home Assistant</h3>
+                    <p>Central hub running on Raspberry Pi, manages devices via MQTT &amp; REST API</p>
+                </div>
+                <div class="arch-arrow">&rarr;</div>
+                <div class="glass" style="flex:1;">
+                    <h3>Switch Box</h3>
+                    <p>Custom ESP32 hardware for physical switch control with magnetic modules</p>
+                </div>
+            </div>
+            <div class="arch-sub">
+                <div class="glass" style="text-align:center;">
+                    <h3>iPhone Companion</h3>
+                    <p>RoomPlan scanning feeds 3D room data into the Dollhouse View</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 7: Section — AVP Modes ====== -->
+    <section>
+        <div class="section-title">
+            <p class="label">RESULT 1</p>
+            <h1>Spatial Interaction<br>Modes</h1>
+            <p class="subtitle">Three ways to control your smart home in mixed reality</p>
+        </div>
+        <aside class="notes">~15s — SECTION BREAK. "Our first major result: three distinct interaction modes." Watch the room scene appear.</aside>
+    </section>
+
+    <!-- ====== SLIDE 8: Three Modes Overview ====== -->
+    <section>
+        <div class="sc padded">
+            <h2>Three Modes of Control</h2>
+            <div class="mode-cards">
+                <div class="glass fragment fade-up">
+                    <span class="mode-num">01</span>
+                    <h3>Touch Mode</h3>
+                    <p>Direct spatial manipulation of virtual controls overlaid on real devices</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <span class="mode-num">02</span>
+                    <h3>Natural Mode</h3>
+                    <p>Gaze at a device and speak your command naturally</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <span class="mode-num">03</span>
+                    <h3>Power Mode</h3>
+                    <p>Custom hand gestures for rapid multi-device orchestration</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 9: Touch Mode ====== -->
+    <section>
+        <div class="split">
+            <div class="split-text">
+                <p class="label">MODE 01</p>
+                <h2>Touch Mode</h2>
+                <p style="margin-top:12px;max-width:420px;">Interact directly with spatial UI controls anchored to real-world devices. Tap a virtual switch, drag a dimmer slider, pinch to adjust.</p>
+                <ul class="feature-list">
+                    <li>Spatial anchoring to real device positions</li>
+                    <li>Tap, drag, pinch gesture support</li>
+                    <li>Real-time state sync with Home Assistant</li>
+                    <li>Expanded to lights, switches, and covers</li>
+                </ul>
+            </div>
+            <div class="split-visual">
+                <div class="screenshot-placeholder">[AVP Touch Mode Screenshot]</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 10: Natural Mode ====== -->
+    <section>
+        <div class="split">
+            <div class="split-text">
+                <p class="label">MODE 02</p>
+                <h2>Natural Mode</h2>
+                <p style="margin-top:12px;max-width:420px;">Look at any smart device and speak. The system uses gaze tracking to identify your target and processes natural language commands.</p>
+                <ul class="feature-list">
+                    <li>Eye-tracking device identification</li>
+                    <li>Natural language command parsing</li>
+                    <li>Conversational feedback via spatial audio</li>
+                    <li>Works with all registered device types</li>
+                </ul>
+            </div>
+            <div class="split-visual">
+                <div class="screenshot-placeholder">[AVP Natural Mode Screenshot]</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 11: Power Mode ====== -->
+    <section>
+        <div class="split">
+            <div class="split-text">
+                <p class="label">MODE 03</p>
+                <h2>Power Mode</h2>
+                <p style="margin-top:12px;max-width:420px;">Define custom hand gestures that trigger complex device actions. One gesture can control multiple devices simultaneously.</p>
+                <ul class="feature-list">
+                    <li>Custom gesture recognition via Vision framework</li>
+                    <li>Multi-device scene triggers</li>
+                    <li>Configurable gesture-to-action mappings</li>
+                    <li>Visual confirmation feedback in spatial UI</li>
+                </ul>
+            </div>
+            <div class="split-visual">
+                <div class="screenshot-placeholder">[AVP Power Mode Screenshot]</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 12: UI + Device Integration ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">IMPROVEMENTS</p>
+            <h2>UI Refinements &amp; Device Integration</h2>
+            <div class="cards cards-3" style="margin-top:28px;">
+                <div class="glass fragment fade-up">
+                    <h3>Redesigned Controls</h3>
+                    <p>Cleaner spatial UI with better depth cues and responsive layouts for comfort at any distance</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Device Expansion</h3>
+                    <p>Support extended from lights to switches, covers, media players, and climate controls</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Performance</h3>
+                    <p>Optimized RealityKit rendering pipeline &mdash; consistent 90fps on Vision Pro hardware</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 13: Section — Switch Box ====== -->
+    <section>
+        <div class="section-title">
+            <p class="label">RESULT 2</p>
+            <h1>The Switch Box</h1>
+            <p class="subtitle">Custom hardware bridging spatial control to physical switches</p>
+        </div>
+        <aside class="notes">~15s — SECTION BREAK. Watch exploded view animation. "Our second result: custom hardware." Let the model reassemble before advancing.</aside>
+    </section>
+
+    <!-- ====== SLIDE 14: Switch Box Overview ====== -->
+    <section>
+        <div class="sc padded">
+            <h2>Switch Box Overview</h2>
+            <p class="subtitle" style="margin-bottom:28px;">A modular ESP32-based enclosure that physically actuates existing wall switches via magnetic modules</p>
+            <div class="cards" style="margin-top:0;">
+                <div class="glass fragment fade-up">
+                    <h3>ESP32 Controller</h3>
+                    <p>Wi-Fi enabled microcontroller handles MQTT messaging and module coordination</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Magnetic Modules</h3>
+                    <p>Snap-on switch actuators with solenoid-driven toggles for different switch types</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Modular Design</h3>
+                    <p>Supports single, double, and dimmer switch configurations in one enclosure</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 15: Module Types ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">HARDWARE</p>
+            <h2>Switch Module Types</h2>
+            <div class="cards" style="margin-top:28px;">
+                <div class="glass">
+                    <h3>Toggle Module</h3>
+                    <p>Standard on/off switches. Solenoid-driven with position feedback sensor.</p>
+                </div>
+                <div class="glass">
+                    <h3>Rocker Module</h3>
+                    <p>Multi-position rockers. Dual actuator design for up/down control.</p>
+                </div>
+                <div class="glass">
+                    <h3>Dimmer Module</h3>
+                    <p>Rotary dimmer control. Stepper motor with encoder for precise positioning.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 16: MQTT Pipeline ====== -->
+    <section>
+        <div class="sc centered">
+            <p class="label">COMMUNICATION</p>
+            <h2>MQTT Pipeline</h2>
+            <div class="pipeline" style="margin-top:48px;">
+                <div class="pipeline-node">
+                    <div class="glass"><h3>Vision Pro</h3><p>User action</p></div>
+                </div>
+                <div class="pipeline-line"></div>
+                <div class="pipeline-node">
+                    <div class="glass"><h3>Home Assistant</h3><p>Command broker</p></div>
+                </div>
+                <div class="pipeline-line"></div>
+                <div class="pipeline-node">
+                    <div class="glass"><h3>MQTT Broker</h3><p>Message queue</p></div>
+                </div>
+                <div class="pipeline-line"></div>
+                <div class="pipeline-node">
+                    <div class="glass"><h3>Switch Box</h3><p>Physical actuation</p></div>
+                </div>
+            </div>
+            <p style="margin-top:32px;max-width:500px;text-align:center;">End-to-end latency under 200ms from spatial gesture to physical switch toggle</p>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 17: Engineering Decisions ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">ENGINEERING</p>
+            <h2>Key Design Decisions</h2>
+            <div class="cards" style="margin-top:28px;">
+                <div class="glass fragment fade-up">
+                    <h3>MQTT over REST</h3>
+                    <p>Pub/sub model enables real-time bidirectional communication with lower overhead than HTTP polling</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Magnetic Mounting</h3>
+                    <p>Non-destructive installation &mdash; attaches over existing switches without rewiring or modifications</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Modular Architecture</h3>
+                    <p>Swap modules to support different switch types without replacing the entire enclosure</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 18: Section — Dollhouse ====== -->
+    <section>
+        <div class="section-title">
+            <p class="label">RESULT 3</p>
+            <h1>The Dollhouse View</h1>
+            <p class="subtitle">A 3D miniature of your home for spatial device management</p>
+        </div>
+        <aside class="notes">~15s — SECTION BREAK. "Our third result: the Dollhouse View." Dollhouse model appears.</aside>
+    </section>
+
+    <!-- ====== SLIDE 19: Dollhouse Concept ====== -->
+    <section>
+        <div class="split">
+            <div class="split-text">
+                <p class="label">CONCEPT</p>
+                <h2>Miniature Home Control</h2>
+                <p style="margin-top:12px;max-width:420px;">A scaled-down 3D replica of your home floats in front of you. See every room, every device, at a glance. Tap any device in the dollhouse to control it.</p>
+                <ul class="feature-list">
+                    <li>Full home overview in spatial miniature</li>
+                    <li>Real-time device state visualization</li>
+                    <li>Tap-to-control any visible device</li>
+                    <li>Seamless transition to room-scale view</li>
+                </ul>
+            </div>
+            <div class="split-visual">
+                <div class="screenshot-placeholder">[Dollhouse View Screenshot]</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 20: Scanning Pipeline ====== -->
+    <section>
+        <div class="sc centered">
+            <p class="label">PIPELINE</p>
+            <h2>From Scan to Dollhouse</h2>
+            <div class="pipeline" style="margin-top:48px;">
+                <div class="pipeline-node">
+                    <div class="glass"><h3>iPhone Scan</h3><p>RoomPlan API</p></div>
+                </div>
+                <div class="pipeline-line"></div>
+                <div class="pipeline-node">
+                    <div class="glass"><h3>Mesh Export</h3><p>USDZ format</p></div>
+                </div>
+                <div class="pipeline-line"></div>
+                <div class="pipeline-node">
+                    <div class="glass"><h3>Transform</h3><p>Scale + position</p></div>
+                </div>
+                <div class="pipeline-line"></div>
+                <div class="pipeline-node">
+                    <div class="glass"><h3>Dollhouse</h3><p>Spatial miniature</p></div>
+                </div>
+            </div>
+            <p style="margin-top:32px;max-width:540px;text-align:center;">The iPhone companion app uses Apple's RoomPlan framework to generate a 3D mesh, which is transformed and rendered as a controllable dollhouse on Vision Pro</p>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 21: Live Demo ====== -->
+    <section>
+        <div class="sc centered">
+            <h1 style="font-size:56px;">Live Demo</h1>
+            <p class="subtitle" style="margin-top:16px;">Transitioning to Apple Vision Pro</p>
+        </div>
+        <aside class="notes">~2 min — Put on AVP. Demo Touch Mode, then Natural Mode voice command, then Power Mode gesture. Return to laptop when done.</aside>
+    </section>
+
+    <!-- ====== SLIDE 22: Next Steps ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">LOOKING AHEAD</p>
+            <h2>Next Steps</h2>
+            <div class="next-grid">
+                <div class="glass fragment fade-up">
+                    <h3>Touch Mode Expansion</h3>
+                    <p>All device types: covers, switches, outlets, climate</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>UWB Positioning</h3>
+                    <p>Ultra-wideband tracking: 20cm accuracy for device anchoring</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Switch Box v2</h3>
+                    <p>Corrected magnet field alignment, final material selection</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Mesh Transformation</h3>
+                    <p>Reliable dollhouse alignment from scan data</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>User Testing</h3>
+                    <p>All three modes with diverse user groups</p>
+                </div>
+                <div class="glass fragment fade-up">
+                    <h3>Market Research</h3>
+                    <p>User surveys and investor outreach</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 23: Timeline ====== -->
+    <section>
+        <div class="sc padded">
+            <p class="label">ROADMAP</p>
+            <h2>Timeline</h2>
+            <div class="timeline-row">
+                <div class="timeline-item fragment fade-up">
+                    <h4>January</h4>
+                    <p>Research phase. AVP SDK exploration, switch box prototyping, RoomPlan feasibility testing.</p>
+                </div>
+                <div class="timeline-item fragment fade-up">
+                    <h4>February</h4>
+                    <p>Core development. Three interaction modes, switch box v1 build, companion app scaffold.</p>
+                </div>
+                <div class="timeline-item fragment fade-up">
+                    <h4>March</h4>
+                    <p>Integration. MQTT pipeline, dollhouse view, end-to-end testing across all components.</p>
+                </div>
+                <div class="timeline-item fragment fade-up">
+                    <h4>April</h4>
+                    <p>Polish and validation. User testing, performance optimization, final presentation.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SLIDE 24: Thank You ====== -->
+    <section>
+        <div class="closing">
+            <h1>ARCASA</h1>
+            <p class="tagline">Your Home, at Your Fingertips</p>
+            <p class="q">Questions?</p>
+        </div>
+    </section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+
+// ============================================================
+// REVEAL.JS INITIALIZATION
+// ============================================================
+await Reveal.initialize({
+    hash: true, transition: 'fade', transitionSpeed: 'default',
+    controls: true, progress: true, width: 1920, height: 1080,
+    autoAnimateDuration: 0.7, autoAnimateEasing: 'ease-in-out',
+    overview: true, help: true,
+});
+Reveal.addKeyBinding({ keyCode: 83, key: 'S', description: 'Speaker view' }, () => {
+    window.open(Reveal.getConfig().url + '?view=speaker', 'speaker');
+});
+
+// ============================================================
+// TYPEWRITER (Slides 0-1)
+// ============================================================
+const textOverlay = document.getElementById('text-overlay');
+const typewriterText = "Tired of pulling out your phone every time you want to control your smart home?";
+let charIndex = 0, typewriterStarted = false, charSpans = [], isRightAligned = false;
+
+(function prepareTypewriter() {
+    textOverlay.innerHTML = '';
+    typewriterText.split(' ').forEach((word, wi, arr) => {
+        const ws = document.createElement('span'); ws.className = 'word';
+        word.split('').forEach(ch => {
+            const s = document.createElement('span'); s.className = 'char'; s.textContent = ch;
+            ws.appendChild(s); charSpans.push(s);
+        });
+        textOverlay.appendChild(ws);
+        if (wi < arr.length - 1) textOverlay.appendChild(document.createTextNode(' '));
+    });
+})();
+
+function typeChar() {
+    if (charIndex < charSpans.length) {
+        charSpans[charIndex].classList.add('visible'); charIndex++;
+        setTimeout(typeChar, 15 + Math.random() * 25);
+    }
+}
+function flipAlign(toRight) {
+    if (toRight === isRightAligned) return;
+    isRightAligned = toRight;
+    const first = charSpans.map(s => s.getBoundingClientRect());
+    textOverlay.style.left = toRight ? '75%' : '50%';
+    textOverlay.style.textAlign = toRight ? 'right' : 'center';
+    const last = charSpans.map(s => s.getBoundingClientRect());
+    charSpans.forEach((s, i) => {
+        s.style.transition = 'none';
+        s.style.transform = `translate(${first[i].left - last[i].left}px, ${first[i].top - last[i].top}px)`;
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        charSpans.forEach(s => { s.style.transition = 'transform 1s ease-in-out'; s.style.transform = 'translate(0,0)'; });
+    }));
+}
+
+// ============================================================
+// PHONE SCENE (Slides 0-1) — Separate Canvas
+// ============================================================
+const phoneCanvas = document.getElementById('phone-canvas');
+const bulbOverlay = document.getElementById('bulb-overlay');
+let phonePivot = null, phoneAnimProgress = 0, phoneAnimating = false, buttonClicked = false;
+let phoneRenderer, phoneScene, phoneCamera, screenPlaneMat;
+
+try {
+    const phoneStartY = -20, phoneEndY = -3;
+    phoneRenderer = new THREE.WebGLRenderer({ canvas: phoneCanvas, alpha: true, antialias: true });
+    phoneRenderer.setPixelRatio(window.devicePixelRatio);
+    phoneScene = new THREE.Scene();
+    phoneCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+    phoneCamera.position.set(0, 0, 20); phoneCamera.lookAt(0, 0, 0);
+    phoneScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(5, 10, 7); phoneScene.add(dl);
+
+    function makeScreenTex(pressed) {
+        const c = document.createElement('canvas'); c.width = 512; c.height = 910;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 512, 910);
+        ctx.fillStyle = '#e8e8e8'; ctx.fillRect(0, 0, 512, 55);
+        ctx.fillStyle = '#666'; ctx.font = 'bold 36px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('Smart Home', 256, 40);
+        const cy = 415, r = pressed ? 100 : 110;
+        ctx.beginPath(); ctx.arc(256, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = pressed ? '#b0b0b0' : '#d0d0d0'; ctx.fill();
+        ctx.font = `${pressed ? 125 : 140}px sans-serif`; ctx.textBaseline = 'middle';
+        ctx.fillText('\u{1F4A1}', 256, cy);
+        ctx.fillStyle = '#333'; ctx.font = 'bold 42px sans-serif'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText('Living Room', 256, cy + 160);
+        ctx.fillStyle = '#999'; ctx.font = '30px sans-serif'; ctx.fillText('Tap to toggle', 256, cy + 200);
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    }
+    const texOff = makeScreenTex(false), texOn = makeScreenTex(true);
+
+    new OBJLoader().load('assets/models/Iphone_8.obj', obj => {
+        const dark = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.3 });
+        let scr = null;
+        obj.traverse(c => { if (c.isMesh) { if (c.material?.name === 'Mat.2') scr = c; c.material = dark; } });
+        if (scr) {
+            const bb = new THREE.Box3().setFromObject(scr), sz = bb.getSize(new THREE.Vector3()), cn = bb.getCenter(new THREE.Vector3());
+            const pw = sz.x * 0.88, ph = pw * (910 / 512);
+            screenPlaneMat = new THREE.MeshBasicMaterial({ map: texOff, side: THREE.DoubleSide });
+            const plane = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), screenPlaneMat);
+            plane.rotation.y = Math.PI; plane.position.copy(cn); plane.position.z = bb.min.z - 0.5;
+            obj.add(plane);
+        }
+        const box = new THREE.Box3().setFromObject(obj), center = box.getCenter(new THREE.Vector3());
+        const s = 14 / Math.max(...box.getSize(new THREE.Vector3()).toArray());
+        obj.scale.setScalar(s); obj.position.set(-center.x * s, -center.y * s, -center.z * s);
+        phonePivot = new THREE.Group(); phonePivot.add(obj); phonePivot.position.y = phoneStartY;
+        phoneScene.add(phonePivot);
+    });
+
+    function phoneLoop() {
+        requestAnimationFrame(phoneLoop);
+        if (phonePivot && phoneAnimating && phoneAnimProgress < 1) {
+            phoneAnimProgress = Math.min(phoneAnimProgress + 0.008, 1);
+            const t = phoneAnimProgress < 0.5 ? 2 * phoneAnimProgress ** 2 : 1 - (-2 * phoneAnimProgress + 2) ** 2 / 2;
+            phonePivot.position.y = -20 + 17 * t; phonePivot.rotation.y = -Math.PI * t;
+        }
+        if (phonePivot && phoneAnimProgress >= 1 && !buttonClicked) {
+            buttonClicked = true;
+            setTimeout(() => {
+                if (screenPlaneMat) { screenPlaneMat.map = texOn; screenPlaneMat.needsUpdate = true; }
+                setTimeout(() => { screenPlaneMat.map = texOff; screenPlaneMat.needsUpdate = true; bulbOverlay.classList.add('lit'); }, 200);
+            }, 600);
+        }
+        if (phonePivot && phoneAnimProgress >= 1) phonePivot.rotation.y = -Math.PI + Math.sin(Date.now() * 0.0005) * 0.1;
+        const r = phoneCanvas.getBoundingClientRect();
+        phoneRenderer.setSize(r.width, r.height);
+        phoneCamera.aspect = r.width / r.height; phoneCamera.updateProjectionMatrix();
+        phoneRenderer.render(phoneScene, phoneCamera);
+    }
+    phoneLoop();
+} catch (e) { console.warn('Phone scene failed:', e); }
+
+// ============================================================
+// MAIN 3D SCENE (Slides 2-23) — Background Canvas
+// ============================================================
+const canvas3d = document.getElementById('three-canvas');
+const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, alpha: false, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.setClearColor(0x0a0a0a, 1);
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 2, 8);
+const camTarget = new THREE.Vector3(0, 0.5, 0);
+camera.lookAt(camTarget);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 8, 6); scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0x6366f1, 0.3);
+rimLight.position.set(-5, 3, -5); scene.add(rimLight);
+
+// Scene groups
+const groups = {};
+['opening', 'room', 'switch', 'dollhouse', 'closing'].forEach(name => {
+    const g = new THREE.Group(); g.visible = false; scene.add(g); groups[name] = g;
+});
+
+// Model loading
+const gltf = new GLTFLoader();
+const models = {};
+
+function normalize(m, size = 3) {
+    const b = new THREE.Box3().setFromObject(m), c = b.getCenter(new THREE.Vector3());
+    const s = size / Math.max(...b.getSize(new THREE.Vector3()).toArray());
+    m.scale.setScalar(s); m.position.set(-c.x * s, -c.y * s, -c.z * s);
+    return m;
+}
+
+async function loadModels() {
+    try {
+        const [dh, sw, ph] = await Promise.all([
+            gltf.loadAsync('assets/images/pptx/media/model3d7.glb'),
+            gltf.loadAsync('assets/images/pptx/media/model3d11.glb'),
+            gltf.loadAsync('assets/images/pptx/media/model3d1.glb'),
+        ]);
+        models.dollhouse = normalize(dh.scene, 3);
+        models.switchBox = normalize(sw.scene, 2.5);
+        models.phone = normalize(ph.scene, 2);
+
+        // Opening: dollhouse gentle rotation
+        const dhClone1 = models.dollhouse.clone();
+        groups.opening.add(dhClone1);
+
+        // Switch section
+        groups.switch.add(models.switchBox);
+
+        // Dollhouse section
+        const dhClone2 = models.dollhouse.clone();
+        groups.dollhouse.add(dhClone2);
+
+        // Room: build simplified environment + devices
+        buildRoom();
+
+        // Closing: all three
+        const dhc = models.dollhouse.clone(); dhc.position.set(-4, 0, 0);
+        const swc = models.switchBox.clone(); swc.position.set(0, 0, 0);
+        const phc = models.phone.clone(); phc.position.set(4, 0, 0);
+        groups.closing.add(dhc, swc, phc);
+
+        console.log('Core models loaded');
+
+        // Progressive: load heavier models in background
+        loadProgressiveModels();
+    } catch (e) {
+        console.warn('Model loading failed:', e);
+    }
+}
+
+function buildRoom() {
+    const g = groups.room;
+    // Dark floor
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 16),
+        new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.95 })
+    );
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -0.5; g.add(floor);
+    // Back wall
+    const wall = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 8),
+        new THREE.MeshStandardMaterial({ color: 0x0e0e0e, roughness: 0.95 })
+    );
+    wall.position.set(0, 3.5, -5); g.add(wall);
+    // Spotlights on device positions
+    const spot1 = new THREE.SpotLight(0xffeedd, 2, 15, 0.4, 0.6);
+    spot1.position.set(-4, 6, 2); spot1.target.position.set(-4, 0, -2); g.add(spot1, spot1.target);
+    const spot2 = new THREE.SpotLight(0xddeeff, 2, 15, 0.4, 0.6);
+    spot2.position.set(4, 6, 2); spot2.target.position.set(4, 0, -2); g.add(spot2, spot2.target);
+}
+
+async function loadProgressiveModels() {
+    try {
+        const [lamp, tv, curtains] = await Promise.all([
+            gltf.loadAsync('assets/images/pptx/media/model3d5.glb'),
+            gltf.loadAsync('assets/images/pptx/media/model3d9.glb'),
+            gltf.loadAsync('assets/images/pptx/media/model3d6.glb'),
+        ]);
+        models.lamp = normalize(lamp.scene, 4);
+        models.lamp.position.set(-4, -0.5, -2);
+        groups.room.add(models.lamp);
+
+        models.tv = normalize(tv.scene, 3);
+        models.tv.position.set(4, 1, -4);
+        groups.room.add(models.tv);
+
+        models.curtains = normalize(curtains.scene, 4);
+        models.curtains.position.set(0, 1.5, -4.8);
+        groups.room.add(models.curtains);
+
+        console.log('Progressive models loaded');
+    } catch (e) { console.warn('Progressive load failed:', e); }
+
+    // AVP headset (heavy)
+    try {
+        const avp = await gltf.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
+        models.avp = normalize(avp.scene, 2);
+        console.log('AVP model loaded');
+    } catch (e) { console.warn('AVP load failed:', e); }
+}
+
+loadModels();
+
+// ============================================================
+// HERO MOMENT ANIMATIONS
+// ============================================================
+
+// --- Hero 1: Switch Box Exploded View (Slide 13) ---
+function explodeSwitchBox() {
+    if (!models.switchBox) return;
+    const parts = [], orig = [];
+    models.switchBox.traverse(child => {
+        if (child.isMesh) { parts.push(child); orig.push(child.position.clone()); }
+    });
+    if (!parts.length) return;
+
+    const center = new THREE.Vector3();
+    orig.forEach(p => center.add(p));
+    center.divideScalar(parts.length);
+
+    // Explode outward with stagger
+    parts.forEach((part, i) => {
+        const dir = new THREE.Vector3().subVectors(orig[i], center);
+        if (dir.length() < 0.1) dir.set(Math.sin(i * 2.39), Math.cos(i * 2.39), 0);
+        dir.normalize();
+        const dist = 1.5 + Math.random() * 0.5;
+        gsap.to(part.position, {
+            x: orig[i].x + dir.x * dist,
+            y: orig[i].y + dir.y * dist,
+            z: orig[i].z + dir.z * dist,
+            duration: 1.2, delay: i * 0.06, ease: 'back.out(1.5)'
+        });
+    });
+
+    // Reassemble after hold
+    setTimeout(() => {
+        parts.forEach((part, i) => {
+            gsap.to(part.position, {
+                x: orig[i].x, y: orig[i].y, z: orig[i].z,
+                duration: 0.8, delay: i * 0.04, ease: 'power3.inOut'
+            });
+        });
+    }, 3500);
+}
+
+// --- Hero 2: Device Emissive Pulse ---
+function pulseDevice(model, color = 0xffeedd) {
+    if (!model) return;
+    model.traverse(child => {
+        if (child.isMesh && child.material) {
+            const mat = child.material;
+            if (!mat.emissive) return;
+            const origColor = mat.emissive.clone();
+            const origIntensity = mat.emissiveIntensity || 0;
+            mat.emissive.set(color);
+            gsap.fromTo(mat, { emissiveIntensity: 0 }, {
+                emissiveIntensity: 1.5, duration: 0.6, ease: 'power2.out',
+                yoyo: true, repeat: 2,
+                onComplete: () => { mat.emissive.copy(origColor); mat.emissiveIntensity = origIntensity; }
+            });
+        }
+    });
+}
+
+// --- Hero 3: Dollhouse Build from Scan (Slide 19) ---
+let dollhouseBuildPlayed = false;
+function dollhouseBuildAnim() {
+    if (dollhouseBuildPlayed) return;
+    dollhouseBuildPlayed = true;
+    const grp = groups.dollhouse;
+    if (!grp.children.length) return;
+    const dh = grp.children[0];
+    dh.scale.set(0, 0, 0);
+    dh.rotation.y = -Math.PI;
+    gsap.to(dh.scale, { x: 1, y: 1, z: 1, duration: 2.5, ease: 'elastic.out(1, 0.6)', delay: 0.5 });
+    gsap.to(dh.rotation, { y: 0, duration: 2.5, ease: 'power2.out', delay: 0.5 });
+}
+
+// --- Hero 4: Closing Orbit — all models orbit together ---
+function startClosingOrbit() {
+    const grp = groups.closing;
+    if (!grp.children.length) return;
+    grp.children.forEach((child, i) => {
+        const angle = (i / grp.children.length) * Math.PI * 2;
+        const radius = 3.5;
+        gsap.to(child.position, {
+            x: Math.cos(angle) * radius,
+            z: Math.sin(angle) * radius,
+            duration: 2, ease: 'power2.inOut'
+        });
+    });
+}
+
+// ============================================================
+// CAMERA & SCENE STATE MANAGEMENT
+// ============================================================
+let currentState = 'none';
+let idleAngle = 0;
+let idleEnabled = true;
+
+// Slide index → scene config
+const slideMap = [
+    /* 0  */ { state: 'none' },
+    /* 1  */ { state: 'none' },
+    /* 2  */ { state: 'opening', cam: [0, 2, 7], tgt: [0, 0.3, 0] },
+    /* 3  */ { state: 'opening', cam: [2, 2.5, 6], tgt: [0, 0.3, 0] },
+    /* 4  */ { state: 'opening', cam: [-1, 2, 7], tgt: [0, 0.5, 0] },
+    /* 5  */ { state: 'opening', cam: [0, 1.5, 8], tgt: [0, 0.5, 0] },
+    /* 6  */ { state: 'room', cam: [0, 3, 9], tgt: [0, 1.5, -2] },
+    /* 7  */ { state: 'room', cam: [0, 2.5, 7], tgt: [0, 1.5, -2] },
+    /* 8  */ { state: 'room', cam: [-3, 2, 3], tgt: [-4, 1.5, -2] },
+    /* 9  */ { state: 'room', cam: [3, 2, 3], tgt: [4, 1.5, -2] },
+    /* 10 */ { state: 'room', cam: [0, 3.5, 10], tgt: [0, 1, -2] },
+    /* 11 */ { state: 'room', cam: [0, 4, 12], tgt: [0, 1.5, -2] },
+    /* 12 */ { state: 'switch', cam: [0, 1.5, 5], tgt: [0, 0.5, 0] },
+    /* 13 */ { state: 'switch', cam: [0, 1.5, 4], tgt: [0, 0.5, 0] },
+    /* 14 */ { state: 'switch', cam: [1, 1.5, 5], tgt: [0, 0.5, 0] },
+    /* 15 */ { state: 'switch', cam: [-1.5, 1, 4.5], tgt: [0, 0.5, 0] },
+    /* 16 */ { state: 'switch', cam: [0, 2, 5], tgt: [0, 0.5, 0] },
+    /* 17 */ { state: 'dollhouse', cam: [3, 3.5, 5], tgt: [0, 0, 0] },
+    /* 18 */ { state: 'dollhouse', cam: [3, 4, 5], tgt: [0, 0, 0] },
+    /* 19 */ { state: 'dollhouse', cam: [2, 2, 4], tgt: [0, 0, 0] },
+    /* 20 */ { state: 'dollhouse', cam: [0, 2, 5], tgt: [0, 0, 0] },
+    /* 21 */ { state: 'closing', cam: [0, 2.5, 10], tgt: [0, 0.5, 0] },
+    /* 22 */ { state: 'closing', cam: [0, 3, 10], tgt: [0, 0.5, 0] },
+    /* 23 */ { state: 'closing', cam: [0, 3, 12], tgt: [0, 0.5, 0] },
+];
+
+function transitionScene(newState) {
+    if (newState === currentState) return;
+    // Fade out old
+    if (currentState !== 'none' && groups[currentState]) {
+        const old = groups[currentState];
+        gsap.to(old.position, { y: -1.5, duration: 0.7, ease: 'power2.in' });
+        gsap.to(old, { duration: 0.7, onComplete: () => { old.visible = false; old.position.y = 0; } });
+    }
+    // Fade in new
+    if (newState !== 'none' && groups[newState]) {
+        const grp = groups[newState];
+        grp.visible = true; grp.position.y = 1.5;
+        gsap.to(grp.position, { y: 0, duration: 0.9, ease: 'power2.out', delay: 0.3 });
+    }
+    currentState = newState;
+}
+
+function moveCamera(pos, tgt, dur = 1.5) {
+    idleEnabled = false;
+    const tl = gsap.timeline({ onComplete: () => { idleEnabled = true; } });
+    tl.to(camera.position, { x: pos[0], y: pos[1], z: pos[2], duration: dur, ease: 'power2.inOut' }, 0);
+    tl.to(camTarget, { x: tgt[0], y: tgt[1], z: tgt[2], duration: dur, ease: 'power2.inOut' }, 0);
+}
+
+// ============================================================
+// SLIDE CHANGE ORCHESTRATOR
+// ============================================================
+Reveal.on('slidechanged', event => {
+    const idx = event.indexh;
+
+    // Typewriter (slide 0)
+    if (idx === 0 && !typewriterStarted) { typewriterStarted = true; setTimeout(typeChar, 800); }
+    textOverlay.classList.toggle('hidden', idx > 1);
+    if (idx === 0) flipAlign(false); else if (idx === 1) flipAlign(true);
+
+    // Phone scene (slides 0-1)
+    phoneCanvas.classList.toggle('visible', idx === 1);
+    bulbOverlay.classList.toggle('visible', idx === 1);
+    if (idx === 1 && !phoneAnimating) { phoneAnimating = true; phoneAnimProgress = 0; }
+    if (idx === 0) { bulbOverlay.classList.remove('lit'); phoneAnimating = false; phoneAnimProgress = 0; buttonClicked = false; }
+
+    // 3D scene (slides 2+)
+    const cfg = slideMap[idx] || { state: 'none' };
+    transitionScene(cfg.state);
+    if (cfg.cam) moveCamera(cfg.cam, cfg.tgt);
+
+    // Hero moments
+    if (idx === 13) setTimeout(explodeSwitchBox, 1200);
+    if (idx === 8) setTimeout(() => pulseDevice(models.lamp, 0xffeedd), 800);
+    if (idx === 9) setTimeout(() => pulseDevice(models.tv, 0xaaddff), 800);
+    if (idx === 10) setTimeout(() => {
+        pulseDevice(models.lamp, 0xffeedd);
+        setTimeout(() => pulseDevice(models.tv, 0xaaddff), 300);
+        setTimeout(() => pulseDevice(models.curtains, 0xddffdd), 600);
+    }, 800);
+    if (idx === 19) setTimeout(dollhouseBuildAnim, 800);
+    if (idx === 21) setTimeout(startClosingOrbit, 800);
+});
+
+// Trigger initial state
+const initIdx = Reveal.getIndices().h;
+if (initIdx === 0 && !typewriterStarted) { typewriterStarted = true; setTimeout(typeChar, 800); }
+
+// ============================================================
+// RENDER LOOP
+// ============================================================
+let lastW = 0, lastH = 0;
+function render() {
+    requestAnimationFrame(render);
+
+    // Idle orbit for camera
+    if (idleEnabled && currentState !== 'none') {
+        idleAngle += 0.003;
+        const cfg = slideMap[Reveal.getIndices().h];
+        if (cfg && cfg.cam) {
+            camera.position.x = cfg.cam[0] + Math.sin(idleAngle) * 0.4;
+            camera.position.y = cfg.cam[1] + Math.cos(idleAngle * 0.7) * 0.15;
+        }
+    }
+
+    // Gentle model rotation within active group
+    if (currentState !== 'none' && groups[currentState]) {
+        const grp = groups[currentState];
+        grp.children.forEach(child => {
+            if (child.userData.noSpin) return;
+            child.rotation.y += 0.002;
+        });
+    }
+
+    camera.lookAt(camTarget);
+
+    // Resize only when needed
+    const w = window.innerWidth, h = window.innerHeight;
+    if (w !== lastW || h !== lastH) {
+        lastW = w; lastH = h;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+    }
+    renderer.render(scene, camera);
+}
+render();
+</script>
+</body>
+</html>
