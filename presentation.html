@@ -1058,27 +1058,6 @@ function createModeUI(type) {
 }
 
 async function loadProgressiveModels() {
-    try {
-        const [lamp, tv, curtains] = await Promise.all([
-            gltf.loadAsync('assets/images/pptx/media/model3d5.glb'),
-            gltf.loadAsync('assets/images/pptx/media/model3d9.glb'),
-            gltf.loadAsync('assets/images/pptx/media/model3d6.glb'),
-        ]);
-        models.lamp = normalize(lamp.scene, 4);
-        models.lamp.position.set(-4, -0.5, -2);
-        groups.room.add(models.lamp);
-
-        models.tv = normalize(tv.scene, 3);
-        models.tv.position.set(4, 1, -4);
-        groups.room.add(models.tv);
-
-        models.curtains = normalize(curtains.scene, 4);
-        models.curtains.position.set(0, 1.5, -4.8);
-        groups.room.add(models.curtains);
-
-        console.log('Progressive models loaded');
-    } catch (e) { console.warn('Progressive load failed:', e); }
-
     // AVP headset (heavy) — used for opening hero + person composite
     try {
         const avp = await gltf.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
@@ -1304,13 +1283,6 @@ Reveal.on('slidechanged', event => {
 
     // Hero moments (indices shifted +1 for added Solution slide)
     if (idx === 14) setTimeout(explodeSwitchBox, 1200);
-    if (idx === 9) setTimeout(() => pulseDevice(models.lamp, 0xffeedd), 800);
-    if (idx === 10) setTimeout(() => pulseDevice(models.tv, 0xaaddff), 800);
-    if (idx === 11) setTimeout(() => {
-        pulseDevice(models.lamp, 0xffeedd);
-        setTimeout(() => pulseDevice(models.tv, 0xaaddff), 300);
-        setTimeout(() => pulseDevice(models.curtains, 0xddffdd), 600);
-    }, 800);
     if (idx === 20) setTimeout(dollhouseBuildAnim, 800);
     if (idx === 22) setTimeout(startClosingOrbit, 800);
 
