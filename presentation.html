@@ -942,7 +942,6 @@ function buildAVPPerson(avpModel) {
     person.add(torso);
 
     // Place AVP headset on the head using a wrapper group
-    // (clone keeps its normalize scale; wrapper applies additional scaling)
     const avpClone = avpModel.clone();
     const avpWrapper = new THREE.Group();
     avpWrapper.add(avpClone);
@@ -950,15 +949,16 @@ function buildAVPPerson(avpModel) {
     const avpBox = new THREE.Box3().setFromObject(avpClone);
     const avpSize = avpBox.getSize(new THREE.Vector3());
     const avpCenter = avpBox.getCenter(new THREE.Vector3());
-    const headsetScale = 2.2 / Math.max(avpSize.x, avpSize.y, avpSize.z);
+    // Target width ~1.4 to sit around the 1.1-wide head naturally
+    const headsetScale = 1.4 / Math.max(avpSize.x, avpSize.y, avpSize.z);
     avpWrapper.scale.setScalar(headsetScale);
+    // Center on the head sphere (y=0.9), nudge forward slightly
     avpWrapper.position.set(
         -avpCenter.x * headsetScale,
-        0.85 - avpCenter.y * headsetScale,
-        -avpCenter.z * headsetScale + 0.1
+        0.9 - avpCenter.y * headsetScale,
+        -avpCenter.z * headsetScale + 0.15
     );
     person.add(avpWrapper);
-    console.log('AVP on head — bbox size:', avpSize, 'headsetScale:', headsetScale);
 
     person.userData.slowSpin = true; // rotate gently on mode slides
     return person;
@@ -977,59 +977,59 @@ function createModeUI(type) {
     });
 
     if (type === 'touch') {
-        // Single floating panel nearby — simple, accessible
-        const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.35), panelMat);
-        panel.position.set(0.9, 0.7, 0.3);
+        // Single large panel nearby — simple, accessible
+        const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.85), panelMat);
+        panel.position.set(2.0, 0.8, 0.5);
         panel.rotation.y = -0.4;
         uiGroup.add(panel);
-        // Small hand icon (sphere near panel)
-        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.08, 16, 16),
+        // Hand indicator sphere near panel
+        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 16),
             new THREE.MeshStandardMaterial({ color: 0xffeedd, emissive: 0xffeedd, emissiveIntensity: 0.5 }));
-        hand.position.set(0.7, 0.55, 0.4);
+        hand.position.set(1.6, 0.5, 0.7);
         uiGroup.add(hand);
     } else if (type === 'natural') {
         // Floating panels + gaze ray + voice waves
-        const panel1 = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.4), panelMat);
-        panel1.position.set(0, 0.9, -1.2); uiGroup.add(panel1);
-        const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.3), panelMatAlt);
-        panel2.position.set(-0.8, 0.6, -0.8); panel2.rotation.y = 0.5; uiGroup.add(panel2);
-        // Gaze ray (thin cylinder from eyes to panel)
+        const panel1 = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.9), panelMat);
+        panel1.position.set(0, 1.0, -2.5); uiGroup.add(panel1);
+        const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.7), panelMatAlt);
+        panel2.position.set(-1.8, 0.7, -1.8); panel2.rotation.y = 0.5; uiGroup.add(panel2);
+        // Gaze ray
         const rayMat = new THREE.MeshStandardMaterial({
             color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.8,
             transparent: true, opacity: 0.4
         });
-        const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1.3, 8), rayMat);
-        ray.position.set(0, 0.95, -0.6); ray.rotation.x = Math.PI / 2;
+        const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 2.5, 8), rayMat);
+        ray.position.set(0, 0.95, -1.2); ray.rotation.x = Math.PI / 2;
         uiGroup.add(ray);
-        // Voice waves (arcs)
+        // Voice waves
         for (let i = 0; i < 3; i++) {
             const wave = new THREE.Mesh(
-                new THREE.TorusGeometry(0.15 + i * 0.1, 0.01, 8, 16, Math.PI),
+                new THREE.TorusGeometry(0.35 + i * 0.2, 0.02, 8, 24, Math.PI),
                 new THREE.MeshStandardMaterial({
                     color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.5,
                     transparent: true, opacity: 0.6 - i * 0.15
                 })
             );
-            wave.position.set(0, 0.5, 0.3 + i * 0.08);
+            wave.position.set(0, 0.5, 0.6 + i * 0.15);
             wave.rotation.y = Math.PI;
             uiGroup.add(wave);
         }
     } else if (type === 'power') {
-        // Dense constellation of panels all around
+        // Dense constellation of large panels all around
         const positions = [
-            [1.0, 1.0, -0.3], [-0.9, 1.1, -0.4], [0.5, 0.3, -1.0],
-            [-0.7, 0.4, -0.9], [0, 1.3, -0.7], [1.1, 0.5, 0.2],
-            [-1.0, 0.7, 0.3], [0.3, 0.1, 0.9]
+            [2.2, 1.4, -0.5], [-2.0, 1.5, -0.7], [1.0, 0.2, -2.2],
+            [-1.5, 0.3, -1.8], [0, 1.8, -1.5], [2.3, 0.6, 0.5],
+            [-2.2, 0.9, 0.5], [0.6, -0.2, 1.8]
         ];
         positions.forEach((p, i) => {
-            const size = 0.25 + Math.random() * 0.25;
+            const size = 0.6 + Math.random() * 0.5;
             const mat = i % 2 === 0 ? panelMat.clone() : panelMatAlt.clone();
             const panel = new THREE.Mesh(new THREE.PlaneGeometry(size, size * 0.7), mat);
             panel.position.set(p[0], p[1], p[2]);
             panel.lookAt(0, 0.9, 0);
             uiGroup.add(panel);
         });
-        // Connection lines between panels
+        // Connection lines
         const lineMat = new THREE.MeshStandardMaterial({
             color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.6,
             transparent: true, opacity: 0.3
@@ -1039,7 +1039,7 @@ function createModeUI(type) {
             const b = new THREE.Vector3(...positions[i + 1]);
             const mid = a.clone().add(b).multiplyScalar(0.5);
             const len = a.distanceTo(b);
-            const line = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, len, 4), lineMat);
+            const line = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, len, 4), lineMat);
             line.position.copy(mid);
             line.lookAt(b);
             line.rotateX(Math.PI / 2);
