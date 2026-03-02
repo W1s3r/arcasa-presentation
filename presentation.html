@@ -868,11 +868,20 @@ async function loadModels() {
     try {
         const [lab, sw, ph] = await Promise.all([
             gltf.loadAsync('assets/models/lab.glb'),
-            gltf.loadAsync('assets/images/pptx/media/model3d11.glb'),
+            gltf.loadAsync('assets/models/switchbox.glb'),
             gltf.loadAsync('assets/images/pptx/media/model3d1.glb'),
         ]);
         models.lab = normalize(lab.scene, 3);
-        models.switchBox = normalize(sw.scene, 2.5);
+        models.switchBox = normalize(sw.scene, 3);
+        // Apply a default material if 3MF parts lack color
+        const switchMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.5, metalness: 0.3 });
+        models.switchBox.traverse(child => {
+            if (child.isMesh && (!child.material || child.material.color?.r === 1 && child.material.color?.g === 1 && child.material.color?.b === 1)) {
+                child.material = switchMat.clone();
+                // Vary color slightly per part for visual distinction
+                child.material.color.setHSL(0, 0, 0.3 + Math.random() * 0.4);
+            }
+        });
         models.phone = normalize(ph.scene, 2);
 
         // Opening: AVP model loads progressively, show nothing initially
@@ -1096,42 +1105,55 @@ loadModels();
 // HERO MOMENT ANIMATIONS
 // ============================================================
 
-// --- Hero 1: Switch Box Exploded View (Slide 13) ---
+// --- Hero 1: Switch Box Exploded View (Slide 14) ---
+let switchExploded = false;
 function explodeSwitchBox() {
-    if (!models.switchBox) return;
+    if (!models.switchBox || switchExploded) return;
+    switchExploded = true;
+
     const parts = [], orig = [];
     models.switchBox.traverse(child => {
         if (child.isMesh) { parts.push(child); orig.push(child.position.clone()); }
     });
     if (!parts.length) return;
 
+    // Compute center of all parts for explosion direction
     const center = new THREE.Vector3();
-    orig.forEach(p => center.add(p));
-    center.divideScalar(parts.length);
+    const bbox = new THREE.Box3().setFromObject(models.switchBox);
+    bbox.getCenter(center);
 
-    // Explode outward with stagger
+    // Scale stagger to fit all parts within ~2 seconds
+    const maxStagger = 2.0;
+    const stagger = parts.length > 1 ? maxStagger / parts.length : 0;
+
+    // Explode outward
     parts.forEach((part, i) => {
-        const dir = new THREE.Vector3().subVectors(orig[i], center);
-        if (dir.length() < 0.1) dir.set(Math.sin(i * 2.39), Math.cos(i * 2.39), 0);
+        // Get world position of the part for proper direction calc
+        const worldPos = new THREE.Vector3();
+        part.getWorldPosition(worldPos);
+        const dir = new THREE.Vector3().subVectors(worldPos, center);
+        if (dir.length() < 0.01) dir.set(Math.sin(i * 2.39), Math.cos(i * 2.39), 0.5);
         dir.normalize();
-        const dist = 1.5 + Math.random() * 0.5;
+        const dist = 2.0 + Math.random() * 1.0;
         gsap.to(part.position, {
             x: orig[i].x + dir.x * dist,
             y: orig[i].y + dir.y * dist,
             z: orig[i].z + dir.z * dist,
-            duration: 1.2, delay: i * 0.06, ease: 'back.out(1.5)'
+            duration: 1.5, delay: i * stagger, ease: 'back.out(1.2)'
         });
     });
 
     // Reassemble after hold
     setTimeout(() => {
+        const reassembleStagger = parts.length > 1 ? 1.5 / parts.length : 0;
         parts.forEach((part, i) => {
             gsap.to(part.position, {
                 x: orig[i].x, y: orig[i].y, z: orig[i].z,
-                duration: 0.8, delay: i * 0.04, ease: 'power3.inOut'
+                duration: 1.0, delay: i * reassembleStagger, ease: 'power3.inOut'
             });
         });
-    }, 3500);
+        setTimeout(() => { switchExploded = false; }, 3000);
+    }, 5000);
 }
 
 // --- Hero 2: Device Emissive Pulse ---
