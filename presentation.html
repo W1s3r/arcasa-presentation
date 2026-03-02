@@ -84,9 +84,9 @@ p, li { font-family: 'Inter',sans-serif; font-weight: 300; font-size: 18px; colo
 
 /* Glass cards */
 .glass { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 16px; padding: 32px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-/* Switch section: reduce glass opacity so 3D model is clearly visible behind */
-.switch-section .glass { background: rgba(10,10,10,0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
-.switch-section::before { background: radial-gradient(ellipse at center, rgba(10,10,10,0.1) 0%, rgba(10,10,10,0.4) 100%) !important; }
+/* Switch section: remove all overlays so 3D model is fully visible */
+.switch-section .glass { background: rgba(10,10,10,0.6); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.switch-section::before { background: none !important; }
 .glass h3 { font-size: 20px; margin-bottom: 10px; }
 .glass p { font-size: 15px; }
 .cards { display: flex; gap: 24px; margin-top: 32px; }
@@ -876,13 +876,11 @@ async function loadModels() {
         ]);
         models.lab = normalize(lab.scene, 3);
         models.switchBox = normalize(sw.scene, 3);
-        // Apply a default material if 3MF parts lack color
-        const switchMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.4, metalness: 0.4 });
+        // Colors come from 3MF — just ensure materials are lit properly
         models.switchBox.traverse(child => {
-            if (child.isMesh && (!child.material || child.material.color?.r === 1 && child.material.color?.g === 1 && child.material.color?.b === 1)) {
-                child.material = switchMat.clone();
-                // Vary color slightly per part for visual distinction
-                child.material.color.setHSL(0, 0, 0.5 + Math.random() * 0.35);
+            if (child.isMesh && child.material) {
+                child.material.roughness = 0.5;
+                child.material.metalness = 0.2;
             }
         });
         models.phone = normalize(ph.scene, 2);
@@ -949,85 +947,72 @@ function createModeUI(type, personModel) {
     const s = h / 3; // scale factor (assuming ~3 unit normalized height)
 
     if (type === 'touch') {
-        // Panels at RIGHT hand fingertip height (raised up, shifted right, in front)
+        // Panels at RIGHT hand fingertip area — shifted right and raised high
         const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMat);
-        panel.position.set(1.2 * s, 0.8 * s, 1.2 * s);
+        panel.position.set(1.8 * s, 1.2 * s, 1.2 * s);
         panel.rotation.y = -0.3;
         uiGroup.add(panel);
-        // Second smaller panel slightly below-right
         const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(0.6 * s, 0.4 * s), panelMatAlt);
-        panel2.position.set(1.4 * s, 0.5 * s, 1.0 * s);
+        panel2.position.set(2.0 * s, 0.9 * s, 1.0 * s);
         panel2.rotation.y = -0.4;
         uiGroup.add(panel2);
-        // Fingertip glow dots at the right-hand finger area
+        // Fingertip glow dots
         const glowMat = new THREE.MeshStandardMaterial({
             color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 1.0,
             transparent: true, opacity: 0.9
         });
-        [[1.0 * s, 0.75 * s, 1.15 * s], [1.15 * s, 0.65 * s, 1.1 * s], [1.05 * s, 0.55 * s, 1.05 * s]].forEach(p => {
+        [[1.6 * s, 1.1 * s, 1.15 * s], [1.75 * s, 1.0 * s, 1.1 * s], [1.65 * s, 0.85 * s, 1.05 * s]].forEach(p => {
             const dot = new THREE.Mesh(new THREE.SphereGeometry(0.06 * s, 12, 12), glowMat);
             dot.position.set(...p);
             uiGroup.add(dot);
         });
     } else if (type === 'natural') {
-        // Panels at a distance IN FRONT (+Z), raised slightly
+        // Panels at a distance IN FRONT (+Z), raised higher
         const panel1 = new THREE.Mesh(new THREE.PlaneGeometry(1.6 * s, 1.0 * s), panelMat);
-        panel1.position.set(0.3 * s, 0.6 * s, 3.0 * s); uiGroup.add(panel1);
+        panel1.position.set(0.3 * s, 1.2 * s, 3.0 * s); uiGroup.add(panel1);
         const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMatAlt);
-        panel2.position.set(-1.5 * s, 0.4 * s, 2.5 * s); panel2.rotation.y = -0.4; uiGroup.add(panel2);
+        panel2.position.set(-1.5 * s, 1.0 * s, 2.5 * s); panel2.rotation.y = -0.4; uiGroup.add(panel2);
         const panel3 = new THREE.Mesh(new THREE.PlaneGeometry(0.8 * s, 0.6 * s), panelMatAlt);
-        panel3.position.set(1.8 * s, 0.8 * s, 2.6 * s); panel3.rotation.y = 0.3; uiGroup.add(panel3);
+        panel3.position.set(1.8 * s, 1.4 * s, 2.6 * s); panel3.rotation.y = 0.3; uiGroup.add(panel3);
         // Gaze ray from eye level forward to main panel
         const rayMat = new THREE.MeshStandardMaterial({
             color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.8,
             transparent: true, opacity: 0.35
         });
         const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015 * s, 0.015 * s, 3.0 * s, 8), rayMat);
-        ray.position.set(0.15 * s, 0.6 * s, 1.5 * s); ray.rotation.x = Math.PI / 2;
+        ray.position.set(0.15 * s, 1.2 * s, 1.5 * s); ray.rotation.x = Math.PI / 2;
         uiGroup.add(ray);
-        // Voice wave arcs emanating forward from mouth area
-        for (let i = 0; i < 3; i++) {
-            const wave = new THREE.Mesh(
-                new THREE.TorusGeometry((0.4 + i * 0.25) * s, 0.02 * s, 8, 24, Math.PI),
-                new THREE.MeshStandardMaterial({
-                    color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.5,
-                    transparent: true, opacity: 0.5 - i * 0.12
-                })
-            );
-            wave.position.set(0, 0.2 * s, 1.0 * s + i * 0.3 * s);
-            wave.rotation.x = -Math.PI / 2; // face forward along Z
-            uiGroup.add(wave);
-        }
+        // No voice wave arcs — removed per user request
     } else if (type === 'power') {
-        // Hand panels at CHEST height, in front
-        const handL = new THREE.Mesh(new THREE.PlaneGeometry(0.7 * s, 0.5 * s), panelMat);
-        handL.position.set(-0.7 * s, 0.5 * s, 0.8 * s); handL.rotation.y = 0.3;
+        // Hand SPHERES at chest height, in front
+        const handL = new THREE.Mesh(new THREE.SphereGeometry(0.25 * s, 16, 16), panelMat);
+        handL.position.set(-0.7 * s, 1.0 * s, 0.8 * s);
         uiGroup.add(handL);
-        const handR = new THREE.Mesh(new THREE.PlaneGeometry(0.7 * s, 0.5 * s), panelMat);
-        handR.position.set(0.7 * s, 0.5 * s, 0.8 * s); handR.rotation.y = -0.3;
+        const handR = new THREE.Mesh(new THREE.SphereGeometry(0.25 * s, 16, 16), panelMat);
+        handR.position.set(0.7 * s, 1.0 * s, 0.8 * s);
         uiGroup.add(handR);
-        // Distant panels IN FRONT and around, connected back to hands
+        // Distant panels IN FRONT, raised higher
         const farPositions = [
-            [2.5 * s, 1.2 * s, 2.0 * s], [-2.5 * s, 1.0 * s, 2.0 * s],
-            [1.5 * s, 0.0, 3.0 * s], [-1.5 * s, 1.5 * s, 2.5 * s],
-            [0, 1.8 * s, 2.5 * s], [3.0 * s, 0.3 * s, 1.0 * s],
+            [2.5 * s, 1.8 * s, 2.0 * s], [-2.5 * s, 1.6 * s, 2.0 * s],
+            [1.5 * s, 0.8 * s, 3.0 * s], [-1.5 * s, 2.0 * s, 2.5 * s],
+            [0, 2.2 * s, 2.5 * s], [3.0 * s, 1.0 * s, 1.0 * s],
         ];
         farPositions.forEach((p, i) => {
             const size = (0.5 + Math.random() * 0.4) * s;
             const mat = i % 2 === 0 ? panelMat.clone() : panelMatAlt.clone();
             const panel = new THREE.Mesh(new THREE.PlaneGeometry(size, size * 0.7), mat);
             panel.position.set(...p);
-            panel.lookAt(0, 0.5 * s, 0);
+            panel.lookAt(0, 1.0 * s, 0);
             uiGroup.add(panel);
         });
-        // Connection lines from hands to distant panels
+        // Connection lines from hand spheres to distant panels
         const lineMat = new THREE.MeshStandardMaterial({
             color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.6,
             transparent: true, opacity: 0.3
         });
         const handPositions = [
-            new THREE.Vector3(-0.7 * s, 0.5 * s, 0.8 * s),
-            new THREE.Vector3(0.7 * s, 0.5 * s, 0.8 * s)
+            new THREE.Vector3(-0.7 * s, 1.0 * s, 0.8 * s),
+            new THREE.Vector3(0.7 * s, 1.0 * s, 0.8 * s)
         ];
         farPositions.forEach((fp, i) => {
             const hand = handPositions[i % 2];
