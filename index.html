@@ -1,2 +1,1215 @@
 <!DOCTYPE html>
-<html><head><meta http-equiv="refresh" content="0;url=presentation.html"></head></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050508">
+    <title>SMART — Your Home, at Your Fingertips</title>
+    <meta name="description" content="SMART: A spatial smart home control platform for Apple Vision Pro. Three interaction modes, modular hardware, and a dollhouse view of your entire home.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
+
+    <style>
+:root {
+    --bg: #050508;
+    --text: #e8e8ec;
+    --text-muted: #6b6b76;
+    --accent: #818cf8;
+    --accent-2: #a78bfa;
+    --surface: rgba(255,255,255,0.03);
+    --border: rgba(255,255,255,0.06);
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); overflow-x: hidden; }
+
+/* Grain overlay */
+#grain {
+    position: fixed; inset: 0; z-index: 200; pointer-events: none; opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+}
+
+/* Scroll progress */
+#scroll-progress {
+    position: fixed; top: 0; left: 0; height: 2px; width: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    z-index: 150;
+}
+
+/* Nav */
+#nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 48px;
+    background: linear-gradient(180deg, rgba(5,5,8,0.8) 0%, transparent 100%);
+    pointer-events: none; transition: background 0.3s;
+}
+.nav-logo {
+    font-family: var(--font-display); font-weight: 800; font-size: 18px;
+    letter-spacing: 0.05em; color: var(--text); pointer-events: auto;
+    text-decoration: none;
+}
+.nav-links { display: flex; gap: 32px; }
+.nav-links a {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-muted); text-decoration: none;
+    pointer-events: auto; transition: color 0.3s;
+}
+.nav-links a:hover { color: var(--text); }
+
+/* Canvas */
+#webgl {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+}
+
+/* Main */
+main { position: relative; z-index: 1; }
+
+/* Section bases */
+section { position: relative; }
+.section-solid { background: var(--bg); }
+.section-inner {
+    width: 100%; max-width: 1200px; margin: 0 auto;
+    padding: 120px 48px;
+}
+.section-inner.centered { text-align: center; }
+
+/* Typography */
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 700; line-height: 1.1; }
+h2 { font-size: clamp(36px, 5vw, 56px); margin-bottom: 16px; }
+h3 { font-size: clamp(18px, 2.5vw, 22px); margin-bottom: 8px; }
+p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.7; }
+
+.section-label {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+}
+.section-label::before { content: ''; width: 32px; height: 1px; background: var(--accent); }
+.centered .section-label { justify-content: center; }
+
+/* Glass cards */
+.glass-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 36px; position: relative; overflow: hidden;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    transition: border-color 0.4s, transform 0.4s;
+}
+.glass-card:hover { border-color: rgba(255,255,255,0.1); }
+.glass-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+}
+.glass-card::after {
+    content: ''; position: absolute; inset: 0; border-radius: 16px; pointer-events: none;
+    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.04) 50%, rgba(255,255,255,0.02) 55%, transparent 60%);
+    background-size: 250% 100%; background-position: 200% 0; transition: background-position 0.6s ease;
+}
+.glass-card:hover::after { background-position: -100% 0; }
+.glass-card .card-number {
+    font-family: var(--font-display); font-weight: 800; font-size: 48px;
+    color: rgba(255,255,255,0.04); position: absolute; top: 12px; right: 20px;
+}
+.glass-card h3 { color: var(--text); }
+.glass-card p { font-size: 15px; margin-top: 8px; }
+
+.cards-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 48px; }
+.cards-row.three-col { grid-template-columns: repeat(3, 1fr); }
+
+/* ============ HERO ============ */
+#hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    background: transparent; position: relative;
+}
+#hero::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 40%, transparent 0%, rgba(5,5,8,0.4) 50%, rgba(5,5,8,0.85) 100%);
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-label {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 4px;
+    color: var(--accent); margin-bottom: 24px; opacity: 0;
+}
+.hero-title {
+    font-family: var(--font-display); font-size: clamp(80px, 15vw, 200px);
+    font-weight: 800; letter-spacing: -0.03em; line-height: 0.9;
+    background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+.hero-title .split-char {
+    display: inline-block; opacity: 0;
+    background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-subtitle {
+    font-family: var(--font-body); font-weight: 300; font-size: clamp(18px, 2.5vw, 24px);
+    color: var(--text-muted); margin-top: 16px; opacity: 0;
+}
+.hero-tags {
+    display: flex; gap: 16px; justify-content: center; margin-top: 32px; opacity: 0;
+}
+.hero-tags span {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 6px 16px; border: 1px solid var(--border); border-radius: 100px;
+}
+.scroll-hint {
+    position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    z-index: 1; opacity: 0;
+}
+.scroll-hint span {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--text-muted);
+}
+.scroll-arrow {
+    width: 1px; height: 32px; background: linear-gradient(180deg, var(--accent), transparent);
+    animation: scrollBounce 2s ease-in-out infinite;
+}
+@keyframes scrollBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(8px); opacity: 1; }
+}
+
+/* ============ SOLUTION ============ */
+.solution-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.solution-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    padding: 40px 32px; position: relative; overflow: hidden;
+    transition: border-color 0.4s, transform 0.4s;
+}
+.solution-card:hover { border-color: rgba(255,255,255,0.1); }
+.solution-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.solution-icon {
+    font-size: 24px; color: var(--accent); margin-bottom: 20px;
+    width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+}
+.solution-card h3 { color: var(--text); font-size: 20px; }
+.solution-card p { font-size: 15px; margin-top: 10px; }
+.solution-tech {
+    font-family: var(--font-mono); font-size: 11px; color: var(--accent);
+    letter-spacing: 1px; margin-top: 20px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+/* ============ ARCHITECTURE ============ */
+.arch-diagram { max-width: 900px; margin: 56px auto 0; }
+.arch-top-row { display: flex; align-items: center; gap: 0; justify-content: center; }
+.arch-node {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px 28px; text-align: center; min-width: 160px;
+}
+.arch-node.accent { border-color: var(--accent); }
+.arch-node h4 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.arch-node p { font-size: 12px; color: var(--text-muted); margin: 0; }
+.arch-arrow {
+    font-family: var(--font-mono); font-size: 20px; color: var(--accent);
+    padding: 0 20px; flex-shrink: 0;
+}
+.arch-bottom { display: flex; flex-direction: column; align-items: center; margin-top: 4px; }
+.arch-arrow.vertical { padding: 12px 0; }
+
+/* ============ SECTION DIVIDER ============ */
+.section-divider {
+    min-height: 80vh; display: flex; align-items: center; justify-content: center;
+    text-align: center; background: var(--bg);
+}
+.divider-content { max-width: 700px; padding: 48px; }
+.big-title {
+    font-size: clamp(48px, 8vw, 96px); font-weight: 800;
+    line-height: 1.0; letter-spacing: -0.02em;
+}
+.divider-sub { font-size: 18px; margin-top: 20px; max-width: 500px; margin-inline: auto; }
+
+/* ============ MODES DETAIL ============ */
+#modes-detail {
+    height: 100vh; position: relative; background: transparent; overflow: hidden;
+}
+#modes-detail::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 30% 50%, rgba(5,5,8,0.3) 0%, rgba(5,5,8,0.8) 60%, rgba(5,5,8,0.95) 100%);
+    z-index: 1;
+}
+.mode-nav {
+    position: absolute; top: 48px; left: 48px; z-index: 10;
+    display: flex; gap: 24px;
+}
+.mode-nav-item {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-muted);
+    padding-bottom: 8px; border-bottom: 2px solid transparent;
+    transition: color 0.3s, border-color 0.3s;
+}
+.mode-nav-item.active { color: var(--accent); border-color: var(--accent); }
+
+.mode-panel {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    padding: 100px 80px 80px; opacity: 0; transition: opacity 0.4s ease;
+    z-index: 2; pointer-events: none;
+}
+.mode-panel.active { opacity: 1; pointer-events: auto; }
+.mode-text { width: 45%; max-width: 500px; }
+.mode-number {
+    font-family: var(--font-display); font-weight: 800; font-size: 64px;
+    color: rgba(255,255,255,0.04); line-height: 1; margin-bottom: 8px;
+}
+.mode-text h3 { font-size: 36px; margin-bottom: 16px; }
+.mode-desc { font-size: 16px; line-height: 1.7; margin-bottom: 24px; }
+.mode-features { list-style: none; margin-bottom: 24px; }
+.mode-features li {
+    padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 15px; color: var(--text-muted);
+}
+.mode-features li::before {
+    content: ''; display: inline-block; width: 5px; height: 5px;
+    background: var(--accent); border-radius: 50%; margin-right: 12px; vertical-align: middle;
+}
+.mode-target {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent);
+}
+.mode-visual { width: 55%; }
+
+/* ============ SWITCH EXPLODE ============ */
+#switch-explode { height: 100vh; position: relative; background: transparent; }
+#switch-explode::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, rgba(5,5,8,0.2) 0%, rgba(5,5,8,0.7) 60%, rgba(5,5,8,0.95) 100%);
+    z-index: 1;
+}
+.switch-info {
+    position: absolute; top: 50%; right: 80px; transform: translateY(-50%);
+    z-index: 10; width: 220px;
+}
+.switch-labels { display: flex; flex-direction: column; gap: 20px; }
+.switch-label-item {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--font-body); font-size: 14px; color: var(--text-muted);
+    opacity: 0; transform: translateX(20px);
+    transition: opacity 0.4s, transform 0.4s, color 0.3s;
+}
+.switch-label-item.visible { opacity: 1; transform: translateX(0); }
+.switch-label-item.active { color: var(--text); }
+.switch-label-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); opacity: 0.4; transition: opacity 0.3s;
+}
+.switch-label-item.active .switch-label-dot { opacity: 1; }
+.switch-progress {
+    margin-top: 32px; width: 100%; height: 2px;
+    background: rgba(255,255,255,0.06); border-radius: 1px; overflow: hidden;
+}
+.switch-progress-fill {
+    height: 100%; width: 0; border-radius: 1px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+.switch-explode-title { position: absolute; top: 48px; left: 80px; z-index: 10; }
+.switch-explode-title .section-label { margin-bottom: 8px; }
+.switch-explode-title h3 { font-size: 28px; color: var(--text); }
+
+/* ============ DOLLHOUSE ============ */
+.split-layout { display: flex; gap: 80px; align-items: center; }
+.split-left { flex: 1; }
+.split-right { flex: 1; min-height: 400px; }
+.split-left h3 { font-size: 28px; margin-bottom: 16px; color: var(--text); }
+.pipeline-steps { margin-top: 36px; display: flex; flex-direction: column; }
+.pipeline-step {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.step-num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 12px; color: var(--accent); flex-shrink: 0;
+}
+.pipeline-step strong { display: block; font-size: 15px; color: var(--text); font-weight: 500; }
+.pipeline-step span { font-size: 13px; color: var(--text-muted); }
+
+/* ============ AHEAD ============ */
+.next-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 48px; }
+
+/* ============ TEAM ============ */
+.team-row { display: flex; gap: 48px; justify-content: center; margin-top: 56px; flex-wrap: wrap; }
+.team-member { text-align: center; width: 140px; }
+.team-member img {
+    width: 88px; height: 88px; border-radius: 50%; object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.08); margin-bottom: 12px; filter: grayscale(0.2);
+}
+.team-member strong { display: block; font-size: 14px; font-weight: 500; color: var(--text); }
+.team-member > span { font-size: 12px; color: var(--text-muted); }
+
+/* ============ CLOSING ============ */
+#closing {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    text-align: center; background: var(--bg); position: relative; overflow: hidden;
+}
+#closing::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(circle at 50% 50%, rgba(129,140,248,0.05) 0%, transparent 60%);
+}
+.closing-content { position: relative; z-index: 1; }
+.closing-title {
+    font-family: var(--font-display); font-size: clamp(80px, 18vw, 240px);
+    font-weight: 800; letter-spacing: -0.03em; line-height: 0.85;
+    background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.4) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.closing-tagline {
+    font-size: clamp(18px, 2.5vw, 24px); color: var(--text-muted);
+    font-weight: 300; margin-top: 16px;
+}
+.closing-tags { display: flex; gap: 16px; justify-content: center; margin-top: 32px; }
+.closing-tags span {
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 6px 16px; border: 1px solid var(--border); border-radius: 100px;
+}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px) {
+    .cards-row, .solution-grid, .next-grid { grid-template-columns: 1fr; }
+    .cards-row.three-col { grid-template-columns: 1fr; }
+    .arch-top-row { flex-direction: column; gap: 4px; }
+    .arch-arrow { transform: rotate(90deg); padding: 8px 0; }
+    .arch-arrow.vertical { transform: none; }
+    .split-layout { flex-direction: column; }
+    .mode-text { width: 80%; }
+    #nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .section-inner { padding: 80px 24px; }
+    .hero-tags { flex-wrap: wrap; }
+    .switch-info { right: 24px; width: 180px; }
+    .switch-explode-title { left: 24px; }
+    .mode-panel { padding: 100px 24px 80px; }
+    .team-row { gap: 24px; }
+}
+@media (max-width: 600px) {
+    .mode-nav { left: 24px; top: 24px; gap: 12px; }
+    .mode-nav-item { font-size: 9px; }
+    .mode-number { font-size: 40px; }
+    .mode-text h3 { font-size: 28px; }
+}
+    </style>
+</head>
+<body>
+
+<div id="grain"></div>
+<div id="scroll-progress"></div>
+
+<nav id="nav">
+    <a class="nav-logo" href="#">SMART</a>
+    <div class="nav-links">
+        <a href="#modes">Modes</a>
+        <a href="#switchfinity">Hardware</a>
+        <a href="#dollhouse">Dollhouse</a>
+        <a href="#team">Team</a>
+    </div>
+</nav>
+
+<canvas id="webgl"></canvas>
+
+<main>
+    <!-- ====== HERO ====== -->
+    <section id="hero">
+        <div class="hero-content">
+            <div class="hero-label">SPATIAL SMART HOME PLATFORM</div>
+            <h1 class="hero-title" data-split>SMART</h1>
+            <p class="hero-subtitle">Your Home, at Your Fingertips</p>
+            <div class="hero-tags">
+                <span>Apple Vision Pro</span>
+                <span>IoT</span>
+                <span>Spatial Computing</span>
+            </div>
+        </div>
+        <div class="scroll-hint">
+            <span>Scroll to explore</span>
+            <div class="scroll-arrow"></div>
+        </div>
+    </section>
+
+    <!-- ====== PROBLEM ====== -->
+    <section id="problem" class="section-solid">
+        <div class="section-inner">
+            <div class="section-label">THE PROBLEM</div>
+            <h2 class="reveal-text">Smart Homes Are Complicated</h2>
+            <div class="cards-row">
+                <div class="glass-card reveal-up">
+                    <div class="card-number">01</div>
+                    <h3>Device Overload</h3>
+                    <p>Nobody wants to scroll through endless lists of devices when trying to control their home. Complexity scales faster than usability.</p>
+                </div>
+                <div class="glass-card reveal-up" data-delay="0.15">
+                    <div class="card-number">02</div>
+                    <h3>Automation Friction</h3>
+                    <p>Creating automations requires a multi-step, unintuitive process that becomes harder to manage as you add more devices.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SOLUTION ====== -->
+    <section id="solution" class="section-solid">
+        <div class="section-inner">
+            <div class="section-label">THE SOLUTION</div>
+            <h2 class="reveal-text">Three Components, One System</h2>
+            <p class="reveal-up" style="max-width:560px;">Spatial, modular, and intuitive &mdash; SMART brings together hardware and software to make smart homes actually simple.</p>
+            <div class="solution-grid">
+                <div class="solution-card reveal-up">
+                    <div class="solution-icon">&cir;</div>
+                    <h3>Vision Pro App</h3>
+                    <p>Spatial device control in 3D space with three interaction modes designed for every type of user</p>
+                    <div class="solution-tech">SwiftUI &middot; RealityKit</div>
+                </div>
+                <div class="solution-card reveal-up" data-delay="0.1">
+                    <div class="solution-icon">&#9643;</div>
+                    <h3>iPhone Companion</h3>
+                    <p>LiDAR room scanning builds a 3D map of your home for the Dollhouse View on Vision Pro</p>
+                    <div class="solution-tech">RoomPlan &middot; ARKit</div>
+                </div>
+                <div class="solution-card reveal-up" data-delay="0.2">
+                    <div class="solution-icon">&#8862;</div>
+                    <h3>Switch Box</h3>
+                    <p>Custom modular hardware bridges the spatial UI to real-world physical switches and controls</p>
+                    <div class="solution-tech">ESP32 &middot; MQTT</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== ARCHITECTURE ====== -->
+    <section id="architecture" class="section-solid">
+        <div class="section-inner centered">
+            <div class="section-label">SYSTEM DESIGN</div>
+            <h2 class="reveal-text">How It Connects</h2>
+            <div class="arch-diagram">
+                <div class="arch-top-row">
+                    <div class="arch-node reveal-up">
+                        <h4>Vision Pro App</h4>
+                        <p>Spatial UI &amp; controls</p>
+                    </div>
+                    <div class="arch-arrow reveal-up" data-delay="0.1">&rarr;</div>
+                    <div class="arch-node accent reveal-up" data-delay="0.15">
+                        <h4>Home Assistant</h4>
+                        <p>MQTT &middot; REST API</p>
+                    </div>
+                    <div class="arch-arrow reveal-up" data-delay="0.2">&larr;</div>
+                    <div class="arch-node reveal-up" data-delay="0.25">
+                        <h4>Switch Box</h4>
+                        <p>ESP32 hardware</p>
+                    </div>
+                </div>
+                <div class="arch-bottom">
+                    <div class="arch-arrow vertical reveal-up" data-delay="0.3">&uarr;</div>
+                    <div class="arch-node reveal-up" data-delay="0.35">
+                        <h4>iPhone Companion</h4>
+                        <p>RoomPlan scanning</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== MODES INTRO ====== -->
+    <section id="modes" class="section-divider">
+        <div class="divider-content">
+            <div class="section-label">SPATIAL INTERACTION</div>
+            <h2 class="big-title reveal-text">Three Ways<br>to Control</h2>
+            <p class="divider-sub reveal-up">Switch freely between modes designed for different users and contexts</p>
+        </div>
+    </section>
+
+    <!-- ====== MODES DETAIL (pinned crossfade) ====== -->
+    <section id="modes-detail">
+        <div class="mode-nav">
+            <span class="mode-nav-item active">01 Touch</span>
+            <span class="mode-nav-item">02 Natural</span>
+            <span class="mode-nav-item">03 Power</span>
+        </div>
+        <div class="mode-panel active" data-mode="touch">
+            <div class="mode-text">
+                <div class="mode-number">01</div>
+                <h3>Touch Mode</h3>
+                <p class="mode-desc">Look at it, reach out, and touch it. An invisible control volume around the index finger enables natural interaction with floating UI panels in 3D space.</p>
+                <ul class="mode-features">
+                    <li>Tactile response for a physical feel</li>
+                    <li>Gaze dwell for relaxed device selection</li>
+                    <li>Floating panels anchored to real devices</li>
+                </ul>
+                <div class="mode-target">For new &amp; casual users</div>
+            </div>
+            <div class="mode-visual"></div>
+        </div>
+        <div class="mode-panel" data-mode="natural">
+            <div class="mode-text">
+                <div class="mode-number">02</div>
+                <h3>Natural Mode</h3>
+                <p class="mode-desc">Quick control at a glance. Device icons floating in 3D space with color pickers and sliders using standard visionOS look-and-pinch interaction.</p>
+                <ul class="mode-features">
+                    <li>Standard visionOS interaction pattern</li>
+                    <li>Device-locked windows reduce clutter</li>
+                    <li>Rich visual information about device state</li>
+                </ul>
+                <div class="mode-target">Default mode for most users</div>
+            </div>
+            <div class="mode-visual"></div>
+        </div>
+        <div class="mode-panel" data-mode="power">
+            <div class="mode-text">
+                <div class="mode-number">03</div>
+                <h3>Power Mode</h3>
+                <p class="mode-desc">Custom multi-hand gestures for rapid control with minimal visual clutter. Wrist tap, conductor wave, prayer hands &mdash; and more gestures coming.</p>
+                <ul class="mode-features">
+                    <li>Wrist Tap &mdash; open settings panel</li>
+                    <li>Conductor &mdash; gesture-driven control</li>
+                    <li>Prayer Hands &mdash; scene selector</li>
+                </ul>
+                <div class="mode-target">For power users &amp; enthusiasts</div>
+            </div>
+            <div class="mode-visual"></div>
+        </div>
+    </section>
+
+    <!-- ====== SWITCHFINITY INTRO ====== -->
+    <section id="switchfinity" class="section-divider">
+        <div class="divider-content">
+            <div class="section-label">MODULAR HARDWARE</div>
+            <h2 class="big-title reveal-text">SwitchFinity</h2>
+            <p class="divider-sub reveal-up">A modular, grid-based physical control interface for our spatial XR ecosystem</p>
+        </div>
+    </section>
+
+    <!-- ====== SWITCH EXPLODE (pinned) ====== -->
+    <section id="switch-explode">
+        <div class="switch-explode-title" style="z-index:10;">
+            <div class="section-label">INSIDE THE BUILD</div>
+            <h3>Scroll to Explore</h3>
+        </div>
+        <div class="switch-info">
+            <div class="switch-labels">
+                <div class="switch-label-item" data-layer="knob">
+                    <span class="switch-label-dot"></span>
+                    <span>Switch Knobs</span>
+                </div>
+                <div class="switch-label-item" data-layer="module">
+                    <span class="switch-label-dot"></span>
+                    <span>Signal Modules</span>
+                </div>
+                <div class="switch-label-item" data-layer="housing">
+                    <span class="switch-label-dot"></span>
+                    <span>3D-Printed Housing</span>
+                </div>
+                <div class="switch-label-item" data-layer="pcb">
+                    <span class="switch-label-dot"></span>
+                    <span>PCB + ESP32</span>
+                </div>
+            </div>
+            <div class="switch-progress">
+                <div class="switch-progress-fill"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== SWITCH DETAILS ====== -->
+    <section id="switch-details" class="section-solid">
+        <div class="section-inner">
+            <div class="cards-row three-col">
+                <div class="glass-card reveal-up">
+                    <h3>Plug &amp; Play</h3>
+                    <p>Hot-swappable modules with auto-detection via magnetic + pogo-pin alignment</p>
+                </div>
+                <div class="glass-card reveal-up" data-delay="0.1">
+                    <h3>Gridfinity Base</h3>
+                    <p>Compatible with the open-source Gridfinity modular grid system for flexible layouts</p>
+                </div>
+                <div class="glass-card reveal-up" data-delay="0.2">
+                    <h3>MQTT Connected</h3>
+                    <p>Wi-Fi enabled ESP32 handles real-time messaging and module coordination</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== DOLLHOUSE ====== -->
+    <section id="dollhouse" class="section-divider">
+        <div class="divider-content">
+            <div class="section-label">SPATIAL SCANNING</div>
+            <h2 class="big-title reveal-text">Dollhouse<br>View</h2>
+            <p class="divider-sub reveal-up">A miniature bird&rsquo;s-eye view with all controls visible at once</p>
+        </div>
+    </section>
+
+    <section id="dollhouse-detail" class="section-solid">
+        <div class="section-inner split-layout">
+            <div class="split-left">
+                <h3 class="reveal-up">From Scan to Miniature</h3>
+                <p class="reveal-up" data-delay="0.1">The iPhone companion app uses Apple&rsquo;s RoomPlan to generate a 3D mesh of your home. This mesh is transformed and rendered as a controllable dollhouse floating in front of you on Vision Pro.</p>
+                <div class="pipeline-steps">
+                    <div class="pipeline-step reveal-up" data-delay="0.15">
+                        <span class="step-num">1</span>
+                        <div><strong>iPhone Scan</strong><span>RoomPlan API</span></div>
+                    </div>
+                    <div class="pipeline-step reveal-up" data-delay="0.2">
+                        <span class="step-num">2</span>
+                        <div><strong>Mesh Export</strong><span>USDZ format</span></div>
+                    </div>
+                    <div class="pipeline-step reveal-up" data-delay="0.25">
+                        <span class="step-num">3</span>
+                        <div><strong>Transform</strong><span>Scale + position</span></div>
+                    </div>
+                    <div class="pipeline-step reveal-up" data-delay="0.3">
+                        <span class="step-num">4</span>
+                        <div><strong>Dollhouse</strong><span>Spatial miniature</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="split-right"></div>
+        </div>
+    </section>
+
+    <!-- ====== NEXT STEPS ====== -->
+    <section id="ahead" class="section-solid">
+        <div class="section-inner">
+            <div class="section-label">LOOKING AHEAD</div>
+            <h2 class="reveal-text">What&rsquo;s Next</h2>
+            <div class="next-grid">
+                <div class="glass-card reveal-up"><h3>Touch Mode Expansion</h3><p>All device types: covers, switches, outlets</p></div>
+                <div class="glass-card reveal-up" data-delay="0.05"><h3>Hardware Finalization</h3><p>Corrected magnet field, final materials</p></div>
+                <div class="glass-card reveal-up" data-delay="0.1"><h3>Mesh Transformation</h3><p>Reliable Dollhouse View alignment</p></div>
+                <div class="glass-card reveal-up" data-delay="0.15"><h3>UWB Positioning</h3><p>20cm &rarr; 10cm tracking accuracy</p></div>
+                <div class="glass-card reveal-up" data-delay="0.2"><h3>User Testing</h3><p>All three modes, diverse user groups</p></div>
+                <div class="glass-card reveal-up" data-delay="0.25"><h3>Market Research</h3><p>User survey &amp; investor outreach</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== TEAM ====== -->
+    <section id="team" class="section-solid">
+        <div class="section-inner centered">
+            <div class="section-label">TEAM SMART</div>
+            <h2 class="reveal-text">Built By</h2>
+            <div class="team-row">
+                <div class="team-member reveal-up">
+                    <img src="assets/images/pptx/media/image13.jpeg" alt="Ethan Spencer">
+                    <strong>Ethan Spencer</strong>
+                    <span>AVP Developer &mdash; Lead</span>
+                </div>
+                <div class="team-member reveal-up" data-delay="0.05">
+                    <img src="assets/images/pptx/media/image14.jpeg" alt="Youssef Chebil">
+                    <strong>Youssef Chebil</strong>
+                    <span>Hardware Designer</span>
+                </div>
+                <div class="team-member reveal-up" data-delay="0.1">
+                    <img src="assets/images/pptx/media/image15.jpeg" alt="Max Wilson">
+                    <strong>Max Wilson</strong>
+                    <span>Mechanical Designer</span>
+                </div>
+                <div class="team-member reveal-up" data-delay="0.15">
+                    <img src="assets/images/pptx/media/image16.png" alt="Justice Jackson">
+                    <strong>Justice Jackson</strong>
+                    <span>RoomPlan Developer</span>
+                </div>
+                <div class="team-member reveal-up" data-delay="0.2">
+                    <strong>Soham Nawthale</strong>
+                    <span>Backend Developer</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== CLOSING ====== -->
+    <section id="closing">
+        <div class="closing-content">
+            <h2 class="closing-title">SMART</h2>
+            <p class="closing-tagline">Your Home, at Your Fingertips</p>
+            <div class="closing-tags">
+                <span>Spatial Computing</span>
+                <span>IoT</span>
+                <span>Smart Home</span>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Three.js -->
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+    }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// ============================================================
+// GSAP SETUP
+// ============================================================
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
+
+// ============================================================
+// THREE.JS SCENE
+// ============================================================
+const canvas = document.getElementById('webgl');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 1, 6);
+
+const camPos = new THREE.Vector3(0, 1, 6);
+const camTarget = new THREE.Vector3(0, 0.5, 0);
+const camLookAt = new THREE.Vector3(0, 0.5, 0);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+keyLight.position.set(5, 8, 6);
+scene.add(keyLight);
+const rimLight = new THREE.DirectionalLight(0x818cf8, 0.2);
+rimLight.position.set(-5, 3, -5);
+scene.add(rimLight);
+
+// Scene groups
+const groups = {};
+['hero', 'modes', 'switch'].forEach(name => {
+    const g = new THREE.Group();
+    g.visible = false;
+    scene.add(g);
+    groups[name] = g;
+});
+
+const models = {};
+const gltfLoader = new GLTFLoader();
+const isMobile = window.innerWidth < 768;
+
+// ============================================================
+// MODEL HELPERS
+// ============================================================
+function normalize(m, size = 3) {
+    const b = new THREE.Box3().setFromObject(m);
+    const c = b.getCenter(new THREE.Vector3());
+    const s = size / Math.max(...b.getSize(new THREE.Vector3()).toArray());
+    m.scale.setScalar(s);
+    m.position.set(-c.x * s, -c.y * s, -c.z * s);
+    return m;
+}
+
+// ============================================================
+// SCENE STATES
+// ============================================================
+let activeScene = 'hero';
+const sceneStates = {
+    hero:   { cam: [0, 1, 6],    look: [0, 0.5, 0] },
+    modes:  { cam: [1.5, 1, 7],  look: [1.5, 0.5, 0] },
+    switch: { cam: [0, 0.8, 5],  look: [0, 0.3, 0] },
+    none:   { cam: [0, 1, 6],    look: [0, 0.5, 0] },
+};
+
+function setScene(name) {
+    const state = sceneStates[name] || sceneStates.none;
+    camPos.set(...state.cam);
+    camTarget.set(...state.look);
+    Object.keys(groups).forEach(k => { groups[k].visible = (k === name); });
+    activeScene = name;
+}
+
+// ============================================================
+// MODEL LOADING
+// ============================================================
+async function loadModels() {
+    if (isMobile) return;
+
+    // AVP headset (hero)
+    try {
+        const avp = await gltfLoader.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
+        models.avp = normalize(avp.scene, 3);
+        models.avp.position.set(0.5, 0.5, 0);
+        groups.hero.add(models.avp);
+        groups.hero.visible = true;
+        console.log('AVP loaded');
+    } catch (e) { console.warn('AVP load failed:', e); }
+
+    // Switch box
+    try {
+        const sw = await gltfLoader.loadAsync('assets/models/switchbox.glb');
+        const swNorm = normalize(sw.scene, 3);
+        swNorm.traverse(child => {
+            if (child.isMesh && child.material) {
+                child.material.roughness = 0.5;
+                child.material.metalness = 0.2;
+            }
+        });
+        const swPivot = new THREE.Group();
+        swPivot.add(swNorm);
+        models.switchBox = swPivot;
+        groups.switch.add(swPivot);
+
+        const sp1 = new THREE.SpotLight(0xffffff, 4, 20, 0.6, 0.5);
+        sp1.position.set(3, 6.5, 5);
+        sp1.target = swPivot;
+        groups.switch.add(sp1, sp1.target);
+        const sp2 = new THREE.SpotLight(0xddeeff, 2, 20, 0.6, 0.5);
+        sp2.position.set(-3, 5.5, 3);
+        sp2.target = swPivot;
+        groups.switch.add(sp2, sp2.target);
+
+        setupSwitchExplode(swPivot);
+        console.log('Switch box loaded');
+    } catch (e) { console.warn('Switch load failed:', e); }
+
+    // Mode figures
+    try {
+        const [touchGlb, naturalGlb, powerGlb] = await Promise.all([
+            gltfLoader.loadAsync('assets/models/TouchMode.glb'),
+            gltfLoader.loadAsync('assets/models/NaturalMode.glb'),
+            gltfLoader.loadAsync('assets/models/PowerMode.glb'),
+        ]);
+        models.touch = normalize(touchGlb.scene, 3.5);
+        models.natural = normalize(naturalGlb.scene, 3.5);
+        models.power = normalize(powerGlb.scene, 3.5);
+
+        [models.touch, models.natural, models.power].forEach(m => {
+            m.position.set(2, -0.3, 0);
+            m.visible = false;
+            groups.modes.add(m);
+        });
+        models.touch.visible = true;
+
+        const modeSpot = new THREE.SpotLight(0xeeeeff, 3, 12, 0.5, 0.7);
+        modeSpot.position.set(2, 5, 3);
+        modeSpot.target.position.set(2, 0, 0);
+        groups.modes.add(modeSpot, modeSpot.target);
+
+        console.log('Mode figures loaded');
+    } catch (e) { console.warn('Mode figures failed:', e); }
+}
+
+loadModels();
+
+// ============================================================
+// SWITCH BOX EXPLODE
+// ============================================================
+let switchExplodeData = null;
+
+function setupSwitchExplode(model) {
+    const parts = [];
+    const bbox = new THREE.Box3();
+
+    model.traverse(child => {
+        if (child.isMesh) {
+            child.geometry.computeBoundingBox();
+            const meshBB = child.geometry.boundingBox.clone();
+            meshBB.translate(child.position);
+            bbox.union(meshBB);
+            parts.push({ mesh: child, origPos: child.position.clone() });
+        }
+    });
+
+    const size = bbox.getSize(new THREE.Vector3());
+    const center = bbox.getCenter(new THREE.Vector3());
+
+    let axis = 'z';
+    if (size.x <= size.y && size.x <= size.z) axis = 'x';
+    else if (size.y <= size.x && size.y <= size.z) axis = 'y';
+
+    const maxExtent = size[axis] * 0.5 || 1;
+    parts.forEach(p => {
+        p.mesh.geometry.computeBoundingBox();
+        const mc = p.mesh.geometry.boundingBox.getCenter(new THREE.Vector3());
+        mc.add(p.mesh.position);
+        p.axisOffset = (mc[axis] - center[axis]) / maxExtent;
+    });
+
+    const spreadDistance = size[axis] * 6;
+    switchExplodeData = { parts, axis, spreadDistance };
+}
+
+function updateSwitchExplode(progress) {
+    if (!switchExplodeData) return;
+    const { parts, axis, spreadDistance } = switchExplodeData;
+    const eased = progress * progress * (3 - 2 * progress);
+    parts.forEach(p => {
+        p.mesh.position[axis] = p.origPos[axis] + p.axisOffset * spreadDistance * eased;
+    });
+}
+
+// ============================================================
+// HERO ENTRANCE ANIMATION
+// ============================================================
+function splitChars(el) {
+    const text = el.textContent;
+    el.innerHTML = '';
+    const spans = [];
+    [...text].forEach(char => {
+        if (char === ' ') { el.appendChild(document.createTextNode(' ')); return; }
+        const span = document.createElement('span');
+        span.className = 'split-char';
+        span.textContent = char;
+        span.style.display = 'inline-block';
+        el.appendChild(span);
+        spans.push(span);
+    });
+    return spans;
+}
+
+const heroTitle = document.querySelector('.hero-title[data-split]');
+const heroChars = splitChars(heroTitle);
+
+const entrance = gsap.timeline({ delay: 0.3 });
+entrance
+    .fromTo(heroChars,
+        { y: 50, opacity: 0, rotateX: -60 },
+        { y: 0, opacity: 1, rotateX: 0, stagger: 0.06, duration: 0.8, ease: 'back.out(1.5)' }
+    )
+    .fromTo('.hero-label', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.4')
+    .fromTo('.hero-subtitle', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
+    .fromTo('.hero-tags', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
+    .fromTo('.scroll-hint', { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.2');
+
+// ============================================================
+// SCROLL PROGRESS BAR
+// ============================================================
+ScrollTrigger.create({
+    start: 0, end: 'max',
+    onUpdate: self => {
+        document.getElementById('scroll-progress').style.width = `${self.progress * 100}%`;
+    }
+});
+
+// ============================================================
+// HERO PARALLAX + 3D FADE
+// ============================================================
+gsap.to('.hero-content', {
+    y: -120, opacity: 0, ease: 'none',
+    scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
+});
+gsap.to('.scroll-hint', {
+    opacity: 0,
+    scrollTrigger: { trigger: '#hero', start: '10% top', end: '30% top', scrub: true },
+});
+
+ScrollTrigger.create({
+    trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true,
+    onUpdate: (self) => {
+        if (models.avp) {
+            models.avp.rotation.y = self.progress * Math.PI * 0.3;
+            models.avp.traverse(c => {
+                if (c.isMesh && c.material) {
+                    if (c.material._origOpacity === undefined) c.material._origOpacity = c.material.opacity;
+                    c.material.transparent = true;
+                    c.material.opacity = c.material._origOpacity * (1 - self.progress);
+                }
+            });
+        }
+    }
+});
+
+// ============================================================
+// REVEAL ANIMATIONS
+// ============================================================
+gsap.utils.toArray('.reveal-text').forEach(el => {
+    gsap.from(el, {
+        y: 50, opacity: 0, duration: 0.9, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' },
+    });
+});
+
+gsap.utils.toArray('.reveal-up').forEach(el => {
+    const delay = parseFloat(el.dataset.delay) || 0;
+    gsap.from(el, {
+        y: 40, opacity: 0, duration: 0.7, delay, ease: 'power2.out',
+        scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' },
+    });
+});
+
+// ============================================================
+// SCENE SWITCHING
+// ============================================================
+ScrollTrigger.create({
+    trigger: '#hero', start: 'top 80%', end: 'bottom 20%',
+    onEnter: () => setScene('hero'), onEnterBack: () => setScene('hero'),
+});
+ScrollTrigger.create({
+    trigger: '#modes-detail', start: 'top 80%', end: 'bottom 20%',
+    onEnter: () => setScene('modes'), onEnterBack: () => setScene('modes'),
+});
+ScrollTrigger.create({
+    trigger: '#switch-explode', start: 'top 80%', end: 'bottom 20%',
+    onEnter: () => setScene('switch'), onEnterBack: () => setScene('switch'),
+});
+
+['#problem', '#solution', '#architecture', '#modes', '#switchfinity',
+ '#switch-details', '#dollhouse', '#dollhouse-detail', '#ahead', '#team', '#closing'].forEach(sel => {
+    const el = document.querySelector(sel);
+    if (!el) return;
+    ScrollTrigger.create({
+        trigger: sel, start: 'top 50%', end: 'bottom 50%',
+        onEnter: () => setScene('none'), onEnterBack: () => setScene('none'),
+    });
+});
+
+// ============================================================
+// MODES SECTION (pinned crossfade)
+// ============================================================
+const modePanels = document.querySelectorAll('.mode-panel');
+const modeNavItems = document.querySelectorAll('.mode-nav-item');
+const modeModelNames = ['touch', 'natural', 'power'];
+let currentMode = 0;
+
+function setMode(index) {
+    if (index === currentMode) return;
+    currentMode = index;
+    modePanels.forEach((panel, i) => panel.classList.toggle('active', i === index));
+    modeNavItems.forEach((item, i) => item.classList.toggle('active', i === index));
+    modeModelNames.forEach((name, i) => {
+        if (models[name]) models[name].visible = (i === index);
+    });
+}
+
+ScrollTrigger.create({
+    trigger: '#modes-detail', start: 'top top', end: '+=300%',
+    pin: true, scrub: true,
+    onUpdate: (self) => {
+        const index = Math.min(Math.floor(self.progress * 3), 2);
+        setMode(index);
+    }
+});
+
+// ============================================================
+// SWITCH EXPLODE (pinned scroll-driven)
+// ============================================================
+const switchLabels = document.querySelectorAll('.switch-label-item');
+const switchFill = document.querySelector('.switch-progress-fill');
+
+ScrollTrigger.create({
+    trigger: '#switch-explode', start: 'top top', end: '+=250%',
+    pin: true, scrub: true,
+    onUpdate: (self) => {
+        const p = self.progress;
+        updateSwitchExplode(p);
+        if (switchFill) switchFill.style.width = `${p * 100}%`;
+        switchLabels.forEach((label, i) => {
+            const threshold = (i + 1) * 0.2;
+            label.classList.toggle('visible', p > threshold);
+            label.classList.toggle('active', p > threshold && p < threshold + 0.25);
+        });
+        if (models.switchBox) {
+            models.switchBox.rotation.y = p * Math.PI * 0.15;
+        }
+    }
+});
+
+// ============================================================
+// CLOSING ANIMATION
+// ============================================================
+gsap.from('.closing-title', {
+    scale: 0.3, opacity: 0, duration: 1, ease: 'power2.out',
+    scrollTrigger: { trigger: '#closing', start: 'top 70%', toggleActions: 'play none none none' },
+});
+gsap.from('.closing-tagline', {
+    y: 30, opacity: 0, duration: 0.8, delay: 0.2,
+    scrollTrigger: { trigger: '#closing', start: 'top 70%', toggleActions: 'play none none none' },
+});
+gsap.from('.closing-tags', {
+    y: 20, opacity: 0, duration: 0.6, delay: 0.4,
+    scrollTrigger: { trigger: '#closing', start: 'top 70%', toggleActions: 'play none none none' },
+});
+
+// ============================================================
+// NAV
+// ============================================================
+const nav = document.getElementById('nav');
+ScrollTrigger.create({
+    start: 100, end: 'max',
+    onUpdate: (self) => {
+        nav.style.background = self.progress > 0.01
+            ? 'rgba(5,5,8,0.92)' : 'linear-gradient(180deg, rgba(5,5,8,0.8) 0%, transparent 100%)';
+    }
+});
+
+document.querySelectorAll('#nav a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) gsap.to(window, { duration: 1, scrollTo: { y: target, offsetY: 0 }, ease: 'power2.inOut' });
+    });
+});
+
+// ============================================================
+// RENDER LOOP
+// ============================================================
+const clock = new THREE.Clock();
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    camera.position.lerp(camPos, 0.06);
+    camLookAt.lerp(camTarget, 0.06);
+    camera.lookAt(camLookAt);
+
+    const t = clock.getElapsedTime();
+    if (activeScene === 'hero' && models.avp) {
+        models.avp.rotation.y += 0.002;
+    }
+    if (activeScene === 'modes') {
+        const active = models[modeModelNames[currentMode]];
+        if (active) active.rotation.y = Math.sin(t * 0.3) * 0.15;
+    }
+    if (activeScene === 'switch' && models.switchBox) {
+        models.switchBox.rotation.x = Math.sin(t * 0.5) * 0.02;
+    }
+
+    renderer.render(scene, camera);
+}
+animate();
+
+// ============================================================
+// RESIZE
+// ============================================================
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============================================================
+// CARD TILT HOVER
+// ============================================================
+document.querySelectorAll('.glass-card, .solution-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        card.style.transform = `perspective(800px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg) translateY(-2px)`;
+    });
+    card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+});
+
+</script>
+</body>
+</html>
