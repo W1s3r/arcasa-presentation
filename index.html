@@ -987,11 +987,11 @@ async function loadModels() {
             pivot.add(ui);
             models[modeTypes[i] + 'UI'] = ui;
 
-            pivot.visible = false;
+            pivot.position.set(2, -0.3 - 5, 0); // start off-screen below
+            pivot.scale.setScalar(0.7);
             groups.modes.add(pivot);
             models[modeTypes[i] + 'Pivot'] = pivot;
         });
-        models.touchPivot.visible = true;
 
         const modeSpot = new THREE.SpotLight(0xeeeeff, 3, 12, 0.5, 0.7);
         modeSpot.position.set(2, 5, 3);
@@ -1253,25 +1253,29 @@ function updateModePanels(progress) {
         const modeStart = i / totalModes;
         const localP = (progress - modeStart) / (1 / totalModes);
 
-        if (localP < -0.01 || localP > 1.01) {
-            pivot.visible = false;
-            pivot.scale.setScalar(1);
+        pivot.visible = true;
+        // Slide Y position: enter from below, exit upward — always positioned, never hidden
+        if (localP <= 0) {
+            // Before this mode: parked below
+            pivot.position.set(2, -0.3 - 5, 0);
+            pivot.scale.setScalar(0.7);
+        } else if (localP < transIn) {
+            const e = smoothstep(localP / transIn);
+            pivot.position.set(2, -0.3 - (1 - e) * 5, 0);
+            pivot.scale.setScalar(0.7 + e * 0.3);
+        } else if (localP > (1 - transOut)) {
+            // Exiting upward
+            const exitP = Math.min(1, (localP - (1 - transOut)) / transOut);
+            const e = smoothstep(exitP);
+            pivot.position.set(2, -0.3 + e * 6, 0);
+            pivot.scale.setScalar(1 - e * 0.3);
+        } else if (localP >= 1) {
+            // After this mode: parked above
+            pivot.position.set(2, -0.3 + 6, 0);
+            pivot.scale.setScalar(0.7);
         } else {
-            pivot.visible = true;
-            // Slide Y position: enter from below, exit upward
-            if (localP < transIn) {
-                const e = smoothstep(Math.max(0, localP) / transIn);
-                pivot.position.set(2, -0.3 - (1 - e) * 5, 0);
-                pivot.scale.setScalar(0.7 + e * 0.3); // subtle scale 0.7 → 1
-            } else if (localP > (1 - transOut)) {
-                // All modes exit upward (including last)
-                const e = smoothstep((localP - (1 - transOut)) / transOut);
-                pivot.position.set(2, -0.3 + e * 6, 0);
-                pivot.scale.setScalar(1 - e * 0.3); // subtle scale 1 → 0.7
-            } else {
-                pivot.position.set(2, -0.3, 0);
-                pivot.scale.setScalar(1);
-            }
+            pivot.position.set(2, -0.3, 0);
+            pivot.scale.setScalar(1);
         }
     });
 
@@ -1476,18 +1480,11 @@ const clock = new THREE.Clock();
 function animate() {
     requestAnimationFrame(animate);
 
-    camera.position.lerp(camPos, 0.06);
-    camLookAt.lerp(camTarget, 0.06);
+    camera.position.copy(camPos);
+    camLookAt.copy(camTarget);
     camera.lookAt(camLookAt);
 
-    const t = clock.getElapsedTime();
-
-    // Hero: gentle idle spin
-    if (activeScene === 'hero' && models.avp) {
-        models.avp.rotation.y += 0.002;
-    }
-
-    // Modes: scroll-driven rotation
+    // Modes: scroll-driven rotation (no idle animations)
     if (activeScene === 'modes') {
         modePivotNames.forEach((name, i) => {
             const pivot = models[name];
@@ -1496,11 +1493,6 @@ function animate() {
             const clamped = Math.max(0, Math.min(1, localP));
             pivot.rotation.y = clamped * Math.PI * 0.5 - Math.PI * 0.05;
         });
-    }
-
-    // Dollhouse: gentle float
-    if (activeScene === 'dollhouse' && models.lab) {
-        models.lab.position.y = Math.sin(t * 0.5) * 0.05;
     }
 
     renderer.render(scene, camera);
