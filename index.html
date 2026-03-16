@@ -52,7 +52,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     content: ''; position: absolute; inset: 0; pointer-events: none;
     background: radial-gradient(ellipse at 50% 40%, transparent 0%, rgba(5,5,8,0.4) 50%, rgba(5,5,8,0.85) 100%);
 }
-.hero-content { position: relative; z-index: 1; padding-top: 8vh; }
+.hero-content { position: relative; z-index: 1; margin-top: 5vh; }
 .hero-label {
     font-family: var(--font-mono); font-size: 16px; letter-spacing: 6px;
     color: var(--accent); margin-bottom: 36px; opacity: 0;
@@ -147,8 +147,8 @@ renderer.toneMappingExposure = 1.0;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
-camera.position.set(0, 1, 6);
-camera.lookAt(0, 0.5, 0); // centered on AVP
+camera.position.set(0, 0.5, 6);
+camera.lookAt(0, 0.15, 0); // centered on AVP
 
 // Lighting
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
@@ -189,7 +189,7 @@ async function loadAVP() {
         // Wrap in pivot group
         avpPivot = new THREE.Group();
         avpPivot.add(avpMesh);
-        avpPivot.position.set(0.1, 0.5, 0);
+        avpPivot.position.set(0.1, 0.15, 0);
         // Start hidden — spin animation will reveal
         avpPivot.scale.setScalar(0);
         scene.add(avpPivot);
