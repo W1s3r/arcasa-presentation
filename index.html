@@ -58,7 +58,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     color: var(--accent); margin-bottom: 36px; opacity: 0;
 }
 .hero-title {
-    font-family: var(--font-display); font-size: clamp(64px, 12vw, 160px);
+    font-family: var(--font-display); font-size: clamp(80px, 15vw, 200px);
     font-weight: 800; letter-spacing: -0.03em; line-height: 0.9;
     background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.5) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -190,8 +190,12 @@ async function loadAVP() {
         avpPivot = new THREE.Group();
         avpPivot.add(avpMesh);
         avpPivot.position.set(-0.3, 0.5, 0);
+        // Start hidden — spin animation will reveal
+        avpPivot.scale.setScalar(0);
         scene.add(avpPivot);
         console.log('AVP loaded');
+        // Trigger spin entrance now that model is ready
+        startAVPSpin();
     } catch (e) { console.warn('AVP load failed:', e); }
 }
 
@@ -219,32 +223,33 @@ function splitChars(el) {
 const heroTitle = document.querySelector('.hero-title[data-split]');
 const heroChars = splitChars(heroTitle);
 
-// AVP spin-in: starts rotated away, spins to face camera
-let avpSpinDone = false;
-const avpSpinStart = -Math.PI * 0.8; // start rotated ~144° away
-const avpSpinEnd = 0;
-
+// AVP spin-in: starts fully rotated away, does a full dramatic spin to face camera
 function startAVPSpin() {
     if (!avpPivot) return;
-    avpPivot.rotation.y = avpSpinStart;
-    gsap.to(avpPivot.rotation, {
-        y: avpSpinEnd,
-        duration: 1.8,
-        ease: 'power3.out',
-        onComplete: () => { avpSpinDone = true; }
-    });
-    // Fade in the AVP via scale
-    avpPivot.scale.setScalar(0.6);
+    avpPivot.rotation.y = -Math.PI; // start facing completely away
+    avpPivot.scale.setScalar(0);
+
+    // Scale up from nothing
     gsap.to(avpPivot.scale, {
         x: 1, y: 1, z: 1,
-        duration: 1.4,
+        duration: 2.0,
         ease: 'power2.out',
+    });
+    // Full 180° spin to face camera
+    gsap.to(avpPivot.rotation, {
+        y: 0,
+        duration: 2.2,
+        ease: 'power2.out',
+        onComplete: () => {
+            // Once spin finishes, start text entrance
+            textEntrance.play();
+        }
     });
 }
 
-// Text entrance — delayed until after AVP spin begins
-const entrance = gsap.timeline({ delay: 1.4 }); // wait for spin to mostly finish
-entrance
+// Text entrance — paused, triggered after AVP spin completes
+const textEntrance = gsap.timeline({ paused: true });
+textEntrance
     .fromTo(heroChars,
         { y: 50, opacity: 0, rotateX: -60 },
         { y: 0, opacity: 1, rotateX: 0, stagger: 0.06, duration: 0.8, ease: 'back.out(1.5)' }
@@ -253,13 +258,6 @@ entrance
     .fromTo('.hero-subtitle', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
     .fromTo('.hero-tags', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
     .fromTo('.scroll-hint', { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.2');
-
-// Kick off AVP spin as soon as model loads (or immediately if already loaded)
-function tryStartSpin() {
-    if (avpPivot) { startAVPSpin(); }
-    else { setTimeout(tryStartSpin, 100); }
-}
-setTimeout(tryStartSpin, 200);
 
 // ============================================================
 // RENDER LOOP
