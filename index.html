@@ -183,38 +183,26 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     line-height: 1.7; margin-bottom: 80px;
 }
 
-.solution-pillars {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+.solution-features {
+    display: flex; flex-direction: column; gap: 0;
     margin-bottom: 80px;
 }
-.pillar {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 48px 36px; position: relative; overflow: hidden;
-    transition: border-color 0.4s;
+.feature-item {
+    display: flex; align-items: flex-start; gap: 40px;
+    padding: 44px 0; border-bottom: 1px solid var(--border);
 }
-.pillar:hover { border-color: rgba(129,140,248,0.2); }
-.pillar::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(129,140,248,0.15), transparent);
+.feature-item:first-child { border-top: 1px solid var(--border); }
+.feature-number {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 500;
+    color: var(--accent); letter-spacing: 2px; padding-top: 4px;
+    flex-shrink: 0;
 }
-.pillar-icon {
-    width: 48px; height: 48px; border-radius: 12px; margin-bottom: 24px;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, rgba(129,140,248,0.15), rgba(167,139,250,0.1));
-    border: 1px solid rgba(129,140,248,0.2);
+.feature-text h3 {
+    font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px);
+    font-weight: 700; color: var(--text); margin-bottom: 10px;
 }
-.pillar-icon svg { width: 24px; height: 24px; }
-.pillar h3 {
-    font-family: var(--font-display); font-size: 22px; font-weight: 700;
-    color: var(--text); margin-bottom: 8px;
-}
-.pillar .pillar-tag {
-    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
-    display: block;
-}
-.pillar p {
-    font-size: 15px; color: var(--text-muted); line-height: 1.7;
+.feature-text p {
+    font-size: 17px; color: var(--text-muted); line-height: 1.7; max-width: 620px;
 }
 
 .solution-cta {
@@ -234,7 +222,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 
 @media (max-width: 768px) {
     .problem-stats { grid-template-columns: 1fr; }
-    .solution-pillars { grid-template-columns: 1fr; }
+    .feature-item { gap: 24px; }
     .section-inner { padding: 80px 24px; }
 }
     </style>
@@ -300,44 +288,32 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
         <h2 class="solution-headline reveal">What if your home had <em>an interface worthy of it?</em></h2>
         <p class="solution-sub reveal">Arcasa is a spatial smart home platform for Apple Vision Pro. Walk into any room and see your entire home — every device, every sensor, every scene — rendered as an interactive 3D environment you control with your eyes and hands.</p>
 
-        <div class="solution-pillars">
-            <div class="pillar reveal">
-                <div class="pillar-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
+        <div class="solution-features">
+            <div class="feature-item reveal">
+                <div class="feature-number">01</div>
+                <div class="feature-text">
+                    <h3>See your entire home</h3>
+                    <p>A 3D dollhouse of every room floats in your space — built from a quick iPhone scan. No setup, no floor plans.</p>
                 </div>
-                <span class="pillar-tag">Vision Pro App</span>
-                <h3>Spatial Control</h3>
-                <p>See a 3D dollhouse of your home floating in your space. Glance at a light to dim it. Pinch a thermostat to adjust it. Your home becomes the interface.</p>
             </div>
-            <div class="pillar reveal">
-                <div class="pillar-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                        <line x1="12" y1="18" x2="12.01" y2="18"/>
-                    </svg>
+            <div class="feature-item reveal">
+                <div class="feature-number">02</div>
+                <div class="feature-text">
+                    <h3>Control with a glance</h3>
+                    <p>Look at a light to dim it. Pinch a thermostat to adjust it. Tap a room to zoom in. Your home becomes the interface.</p>
                 </div>
-                <span class="pillar-tag">iPhone Companion</span>
-                <h3>RoomPlan Scanning</h3>
-                <p>Walk through your home with your iPhone to capture every room using Apple's RoomPlan API. No manual setup, no floor plans — just scan and go.</p>
             </div>
-            <div class="pillar reveal">
-                <div class="pillar-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="6" width="20" height="12" rx="2"/>
-                        <path d="M12 12h.01"/><path d="M17 12h.01"/><path d="M7 12h.01"/>
-                    </svg>
+            <div class="feature-item reveal">
+                <div class="feature-number">03</div>
+                <div class="feature-text">
+                    <h3>Every device, one view</h3>
+                    <p>Connects to 2,000+ devices through Home Assistant — lights, locks, cameras, climate. No more app switching. Ever.</p>
                 </div>
-                <span class="pillar-tag">Hardware Hub</span>
-                <h3>Home Assistant Bridge</h3>
-                <p>Connects to 2,000+ device types through Home Assistant. One hub replaces the app drawer — Philips Hue, Nest, Ring, Sonos, and everything in between.</p>
             </div>
         </div>
 
         <div class="solution-cta reveal">
-            <p>Not another app on your phone.<br>A <em>window into your home</em> you can reach into.</p>
+            <p>Not another app on your phone.<br>A <em>spatial window into your home</em> you can reach into.</p>
         </div>
     </div>
 </section>
@@ -486,7 +462,7 @@ textEntrance
 gsap.registerPlugin(ScrollTrigger);
 
 document.querySelectorAll('.reveal').forEach((el, i) => {
-    const staggerParent = el.closest('.problem-stats') || el.closest('.solution-pillars');
+    const staggerParent = el.closest('.problem-stats') || el.closest('.solution-features');
     gsap.from(el, {
         y: 50, opacity: 0, duration: 0.9, ease: 'power3.out',
         delay: staggerParent ? (Array.from(el.parentNode.children).indexOf(el)) * 0.12 : 0,
