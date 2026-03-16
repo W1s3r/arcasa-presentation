@@ -1218,18 +1218,20 @@ function updateModePanels(progress) {
         const modeStart = i / totalModes;
         const localP = (progress - modeStart) / (1 / totalModes);
 
-        if (localP < -0.05 || localP > 1.05) {
+        if (localP < -0.01 || localP > 1.01) {
             pivot.visible = false;
+            pivot.scale.setScalar(1);
         } else {
             pivot.visible = true;
             // Slide Y position: enter from below, exit upward
             if (localP < transIn) {
                 const e = smoothstep(Math.max(0, localP) / transIn);
-                pivot.position.set(2, -0.3 - (1 - e) * 5, 0); // enter from below (Y: -5.3 → -0.3)
+                pivot.position.set(2, -0.3 - (1 - e) * 5, 0);
+                pivot.scale.setScalar(e); // scale up as it enters
             } else if (localP > (1 - transOut) && i < totalModes - 1) {
                 const e = smoothstep((localP - (1 - transOut)) / transOut);
-                pivot.position.set(2, -0.3 + e * 6, 0); // exit upward (Y: -0.3 → 5.7)
-                pivot.scale.setScalar(1 - e * 0.3); // shrink slightly as it rises
+                pivot.position.set(2, -0.3 + e * 6, 0);
+                pivot.scale.setScalar(1 - e); // scale down as it exits
             } else {
                 pivot.position.set(2, -0.3, 0);
                 pivot.scale.setScalar(1);
@@ -1282,27 +1284,29 @@ ScrollTrigger.create({
 
         if (!models.lab) return;
 
-        // Phase 1: Scale up + 180° spin (0 → 0.35)
-        if (p < 0.35) {
-            const t = p / 0.35;
+        // Phase 1: Scale up + full 180° spin (0 → 0.4) — wide sweeping reveal
+        if (p < 0.4) {
+            const t = p / 0.4;
             const eased = 1 - Math.pow(1 - t, 3);
             models.lab.scale.setScalar(eased);
-            models.lab.rotation.y = -Math.PI + eased * Math.PI; // -180° → 0°
-            camPos.set(3, 3.5, 5);
+            models.lab.rotation.y = -Math.PI + eased * Math.PI; // full -180° → 0°
+            // Camera pulls back during spin for dramatic reveal
+            const camDist = 7 - eased * 2; // 7 → 5
+            camPos.set(camDist * 0.5, 3.5 + (1 - eased) * 1, camDist);
             camTarget.set(0, 0, 0);
             if (models.scanSpotlight) models.scanSpotlight.intensity = 0;
         }
-        // Phase 2: Spotlight fade in (0.35 → 0.55)
+        // Phase 2: Spotlight fade in (0.4 → 0.55)
         else if (p < 0.55) {
             if (!dollhouseBuilt) { models.lab.scale.setScalar(1); dollhouseBuilt = true; }
             models.lab.rotation.y = 0;
             camPos.set(3, 3.5, 5);
             camTarget.set(0, 0, 0);
-            const t = (p - 0.35) / 0.2;
+            const t = (p - 0.4) / 0.15;
             const eased = smoothstep(t);
             if (models.scanSpotlight) models.scanSpotlight.intensity = eased * 8;
         }
-        // Phase 3: Big zoom in + 90° rotation in opposite direction (0.55 → 1.0)
+        // Phase 3: Big zoom in + 90° counter-rotation, directly onto scanning person (0.55 → 1.0)
         else {
             if (!dollhouseBuilt) { models.lab.scale.setScalar(1); dollhouseBuilt = true; }
             if (models.scanSpotlight) models.scanSpotlight.intensity = 8;
@@ -1310,11 +1314,11 @@ ScrollTrigger.create({
             const eased = smoothstep(t);
             // Rotate 90° in opposite direction (0° → -90°)
             models.lab.rotation.y = -eased * (Math.PI / 2);
-            // Zoom from wide to close-up on scanning person
+            // Zoom from wide view right into the scanning person's face
             const startCam = [3, 3.5, 5];
-            const endCam = [1.3, 0.15, 0.6];
+            const endCam = [0.4, 0.0, 0.3];   // very close to scan person
             const startTgt = [0, 0, 0];
-            const endTgt = [0.6, -0.1, 0.2];
+            const endTgt = [0.3, -0.3, 0.2];  // look directly at scan person
             camPos.set(
                 startCam[0] + (endCam[0] - startCam[0]) * eased,
                 startCam[1] + (endCam[1] - startCam[1]) * eased,
