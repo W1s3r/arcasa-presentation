@@ -959,19 +959,24 @@ async function loadModels() {
         console.log('Mode figures + UI loaded');
     } catch (e) { console.warn('Mode figures failed:', e); }
 
-    // Dollhouse (lab model)
+    // Dollhouse (lab model) — use a wrapper group so animation transforms
+    // don't clobber the normalize centering offset on the inner scene
     try {
         const labGlb = await gltfLoader.loadAsync('assets/models/lab.glb');
-        const labModel = normalize(labGlb.scene, 3);
-        models.lab = labModel;
-        models.labNormScale = labModel.scale.x; // preserve normalized scale factor
+        const labInner = normalize(labGlb.scene, 3);
+
+        // Wrapper group: scale/rotation/position animations go here
+        const labContainer = new THREE.Group();
+        labContainer.add(labInner);
+        models.lab = labContainer;
+        models.labInner = labInner;
 
         // Start scaled to 0 for build animation
-        labModel.scale.set(0, 0, 0);
-        labModel.rotation.y = -Math.PI;
-        groups.dollhouse.add(labModel);
+        labContainer.scale.set(0, 0, 0);
+        labContainer.rotation.y = -Math.PI;
+        groups.dollhouse.add(labContainer);
 
-        // Scanning person inside the lab
+        // Scanning person inside the lab (child of labInner so it inherits normalize transform)
         try {
             const scanGlb = await gltfLoader.loadAsync('assets/models/Scanning.glb');
             const scanScene = scanGlb.scene;
@@ -991,13 +996,13 @@ async function loadModels() {
             scanGroup.position.set(0.3, -1.3, 0.2);
             scanGroup.rotation.y = Math.PI * 0.3;
             models.scanPerson = scanGroup;
-            labModel.add(scanGroup);
+            labInner.add(scanGroup);
 
             // Warm spotlight focused on scanning person (starts dim, intensifies during orbit)
             const scanSpot = new THREE.SpotLight(0xffeedd, 0, 15, 0.8, 0.3);
             scanSpot.position.set(0.3, 4, 0.5);
             scanSpot.target.position.set(0.3, 0, 0.2);
-            labModel.add(scanSpot, scanSpot.target);
+            labInner.add(scanSpot, scanSpot.target);
             models.scanSpotlight = scanSpot;
 
             console.log('Scanning person loaded');
@@ -1220,7 +1225,7 @@ function updateModePanels(progress) {
             // Slide Y position: enter from below, exit upward
             if (localP < transIn) {
                 const e = smoothstep(Math.max(0, localP) / transIn);
-                pivot.position.set(2, -0.3 + (1 - e) * 3, 0); // rise from below
+                pivot.position.set(2, -0.3 - (1 - e) * 3, 0); // enter from below
             } else if (localP > (1 - transOut) && i < totalModes - 1) {
                 const e = smoothstep((localP - (1 - transOut)) / transOut);
                 pivot.position.set(2, -0.3 + e * 3, 0); // rise up to exit
@@ -1276,17 +1281,16 @@ ScrollTrigger.create({
         if (!models.lab) return;
 
         // Phase 1: Build animation (0 -> 0.2) — scale up + reveal spin
-        const ns = models.labNormScale || 1;
         if (p < 0.2) {
             const buildP = p / 0.2;
             const eased = 1 - Math.pow(1 - buildP, 3);
-            models.lab.scale.set(eased * ns, eased * ns, eased * ns);
+            models.lab.scale.setScalar(eased);
             models.lab.rotation.y = -Math.PI * (1 - eased); // spin from -180° to 0°
             if (models.scanSpotlight) models.scanSpotlight.intensity = 0;
         }
         // Phase 2: Orbit (0.2 -> 0.5) — camera orbits, lab stays at rotation 0
         else if (p < 0.5) {
-            if (!dollhouseBuilt) { models.lab.scale.setScalar(ns); dollhouseBuilt = true; }
+            if (!dollhouseBuilt) { models.lab.scale.setScalar(1); dollhouseBuilt = true; }
             const orbitP = (p - 0.2) / 0.3;
             const angle = orbitP * Math.PI * 1.2; // ~216° orbit
             const radius = 5;
