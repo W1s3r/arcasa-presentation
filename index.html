@@ -315,6 +315,17 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
     height: 100%; width: 0; border-radius: 1px;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
 }
+.dollhouse-pipeline-overlay {
+    position: absolute; right: 60px; top: 50%; transform: translateY(-50%);
+    z-index: 10; max-width: 320px; opacity: 0; pointer-events: none;
+}
+.dollhouse-pipeline-overlay h3 {
+    font-size: 22px; color: var(--text); margin-bottom: 20px;
+}
+.dollhouse-pipeline-overlay .pipeline-step {
+    opacity: 0; transform: translateX(30px);
+    transition: none;
+}
 
 /* ============ DOLLHOUSE DETAIL ============ */
 .split-layout { display: flex; gap: 80px; align-items: center; }
@@ -594,6 +605,27 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
             <p>The iPhone companion app uses RoomPlan to scan your home, then renders a controllable miniature on Vision Pro.</p>
             <div class="dollhouse-progress">
                 <div class="dollhouse-progress-fill"></div>
+            </div>
+        </div>
+        <div class="dollhouse-pipeline-overlay">
+            <h3>From Scan to Miniature</h3>
+            <div class="pipeline-steps">
+                <div class="pipeline-step dh-step" data-step="0">
+                    <span class="step-num">1</span>
+                    <div><strong>iPhone Scan</strong><span>RoomPlan API</span></div>
+                </div>
+                <div class="pipeline-step dh-step" data-step="1">
+                    <span class="step-num">2</span>
+                    <div><strong>Mesh Export</strong><span>USDZ format</span></div>
+                </div>
+                <div class="pipeline-step dh-step" data-step="2">
+                    <span class="step-num">3</span>
+                    <div><strong>Transform</strong><span>Scale + position</span></div>
+                </div>
+                <div class="pipeline-step dh-step" data-step="3">
+                    <span class="step-num">4</span>
+                    <div><strong>Dollhouse</strong><span>Spatial miniature</span></div>
+                </div>
             </div>
         </div>
     </section>
@@ -1273,10 +1305,16 @@ document.querySelectorAll('.mode-features li').forEach(li => {
 // DOLLHOUSE VIEW (pinned scroll-driven build + orbit)
 // ============================================================
 const dhFill = document.querySelector('.dollhouse-progress-fill');
+const dhPipelineOverlay = document.querySelector('.dollhouse-pipeline-overlay');
+const dhSteps = document.querySelectorAll('.dh-step');
+const dhOverlayText = document.querySelector('.dollhouse-overlay');
 let dollhouseBuilt = false;
+// Cache the person's zoom end camera positions
+let personCamEnd = null;
+let personTgtEnd = null;
 
 ScrollTrigger.create({
-    trigger: '#dollhouse-view', start: 'top top', end: '+=350%',
+    trigger: '#dollhouse-view', start: 'top top', end: '+=500%',
     pin: true, scrub: true,
     onEnter: () => setScene('dollhouse'),
     onEnterBack: () => setScene('dollhouse'),
@@ -1288,61 +1326,92 @@ ScrollTrigger.create({
 
         if (!models.lab) return;
 
-        // Phase 1: Scale up + 300° spin (0 → 0.4) — -180° past 0° to +120°
-        if (p < 0.4) {
-            const t = p / 0.4;
+        // Phase 1: Scale up + 300° spin (0 → 0.3) — -180° past 0° to +120°
+        if (p < 0.3) {
+            const t = p / 0.3;
             const eased = 1 - Math.pow(1 - t, 3);
             models.lab.scale.setScalar(eased);
-            // Spin from -180° to +120° (300° total)
-            const startRot = -Math.PI;             // -180°
-            const endRot = (2 * Math.PI) / 3;     // +120°
+            const startRot = -Math.PI;
+            const endRot = (2 * Math.PI) / 3;
             models.lab.rotation.y = startRot + eased * (endRot - startRot);
             const camDist = 7 - eased * 2;
             camPos.set(camDist * 0.5, 3.5 + (1 - eased) * 1, camDist);
             camTarget.set(0, 0, 0);
             if (models.scanSpotlight) models.scanSpotlight.intensity = 0;
+            // Hide pipeline overlay
+            if (dhPipelineOverlay) dhPipelineOverlay.style.opacity = '0';
+            if (dhOverlayText) dhOverlayText.style.opacity = '1';
         }
-        // Phase 2: Spotlight fade in, hold at +120° (0.4 → 0.55)
-        else if (p < 0.55) {
+        // Phase 2: Spotlight fade in, hold at +120° (0.3 → 0.4)
+        else if (p < 0.4) {
             if (!dollhouseBuilt) { models.lab.scale.setScalar(1); dollhouseBuilt = true; }
-            models.lab.rotation.y = (2 * Math.PI) / 3; // hold +120°
+            models.lab.rotation.y = (2 * Math.PI) / 3;
             camPos.set(3, 3.5, 5);
             camTarget.set(0, 0, 0);
-            const t = (p - 0.4) / 0.15;
+            const t = (p - 0.3) / 0.1;
             const eased = smoothstep(t);
             if (models.scanSpotlight) models.scanSpotlight.intensity = eased * 8;
+            if (dhPipelineOverlay) dhPipelineOverlay.style.opacity = '0';
+            if (dhOverlayText) dhOverlayText.style.opacity = `${1 - eased}`;
         }
-        // Phase 3: Zoom in + rotate back 90° (+120° → +30°) onto scanning person (0.55 → 1.0)
-        else {
+        // Phase 3: Zoom in + rotate back 90° (+120° → +30°) onto scanning person (0.4 → 0.65)
+        else if (p < 0.65) {
             if (!dollhouseBuilt) { models.lab.scale.setScalar(1); dollhouseBuilt = true; }
             if (models.scanSpotlight) models.scanSpotlight.intensity = 8;
-            const t = (p - 0.55) / 0.45;
+            const t = (p - 0.4) / 0.25;
             const eased = smoothstep(t);
-            // Rotate back 90° from +120° to +30°
-            const phase2Rot = (2 * Math.PI) / 3;   // +120°
-            const phase3Rot = Math.PI / 6;          // +30°
+            const phase2Rot = (2 * Math.PI) / 3;
+            const phase3Rot = Math.PI / 6;
             models.lab.rotation.y = phase2Rot + eased * (phase3Rot - phase2Rot);
 
-            // Get the scanning person's actual world position
             const personWorldPos = new THREE.Vector3();
             if (models.scanPerson) {
                 models.scanPerson.getWorldPosition(personWorldPos);
             }
-            // Camera offset: get very close, slightly in front and above eye level
-            const endCam = [personWorldPos.x + 0.3, personWorldPos.y + 0.4, personWorldPos.z + 0.5];
-            const endTgt = [personWorldPos.x, personWorldPos.y + 0.2, personWorldPos.z];
+            personCamEnd = [personWorldPos.x + 0.3, personWorldPos.y + 0.4, personWorldPos.z + 0.5];
+            personTgtEnd = [personWorldPos.x, personWorldPos.y + 0.2, personWorldPos.z];
             const startCam = [3, 3.5, 5];
             const startTgt = [0, 0, 0];
             camPos.set(
-                startCam[0] + (endCam[0] - startCam[0]) * eased,
-                startCam[1] + (endCam[1] - startCam[1]) * eased,
-                startCam[2] + (endCam[2] - startCam[2]) * eased
+                startCam[0] + (personCamEnd[0] - startCam[0]) * eased,
+                startCam[1] + (personCamEnd[1] - startCam[1]) * eased,
+                startCam[2] + (personCamEnd[2] - startCam[2]) * eased
             );
             camTarget.set(
-                startTgt[0] + (endTgt[0] - startTgt[0]) * eased,
-                startTgt[1] + (endTgt[1] - startTgt[1]) * eased,
-                startTgt[2] + (endTgt[2] - startTgt[2]) * eased
+                startTgt[0] + (personTgtEnd[0] - startTgt[0]) * eased,
+                startTgt[1] + (personTgtEnd[1] - startTgt[1]) * eased,
+                startTgt[2] + (personTgtEnd[2] - startTgt[2]) * eased
             );
+            if (dhPipelineOverlay) dhPipelineOverlay.style.opacity = '0';
+            if (dhOverlayText) dhOverlayText.style.opacity = '0';
+        }
+        // Phase 4: Camera holds on person, pipeline steps appear sequentially (0.65 → 1.0)
+        else {
+            if (!dollhouseBuilt) { models.lab.scale.setScalar(1); dollhouseBuilt = true; }
+            if (models.scanSpotlight) models.scanSpotlight.intensity = 8;
+            models.lab.rotation.y = Math.PI / 6; // hold +30°
+
+            // Hold camera on person
+            if (personCamEnd && personTgtEnd) {
+                camPos.set(...personCamEnd);
+                camTarget.set(...personTgtEnd);
+            }
+
+            // Show pipeline overlay
+            if (dhOverlayText) dhOverlayText.style.opacity = '0';
+            const stepsP = (p - 0.65) / 0.35; // 0→1 over this phase
+            if (dhPipelineOverlay) {
+                const overlayFade = smoothstep(Math.min(1, stepsP * 4));
+                dhPipelineOverlay.style.opacity = `${overlayFade}`;
+            }
+            // Reveal each step sequentially
+            dhSteps.forEach((step, i) => {
+                const stepStart = (i / dhSteps.length) * 0.8; // stagger across 80% of phase
+                const stepP = Math.max(0, Math.min(1, (stepsP - stepStart) / 0.2));
+                const e = smoothstep(stepP);
+                step.style.opacity = `${e}`;
+                step.style.transform = `translateX(${(1 - e) * 30}px)`;
+            });
         }
     }
 });
@@ -1354,8 +1423,12 @@ ScrollTrigger.create({
         if (models.lab) {
             dollhouseBuilt = false;
             models.lab.scale.setScalar(0);
-            models.lab.rotation.y = -Math.PI; // reset to start of 180° spin
+            models.lab.rotation.y = -Math.PI;
+            personCamEnd = null;
+            personTgtEnd = null;
         }
+        if (dhPipelineOverlay) dhPipelineOverlay.style.opacity = '0';
+        dhSteps.forEach(s => { s.style.opacity = '0'; s.style.transform = 'translateX(30px)'; });
     }
 });
 
