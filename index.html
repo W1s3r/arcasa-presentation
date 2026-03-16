@@ -379,11 +379,7 @@ async function loadAVP() {
     try {
         const avp = await gltfLoader.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
         const avpMesh = normalize(avp.scene, 3);
-        // Offset so rotation pivots around the screen/visor face
-        const avpBox = new THREE.Box3().setFromObject(avpMesh);
-        const avpDepth = avpBox.max.z - avpBox.min.z;
-        avpMesh.position.z -= avpDepth * 0.45;
-        // Wrap in pivot group
+        // Wrap in pivot group — rotates around geometric center
         avpPivot = new THREE.Group();
         avpPivot.add(avpMesh);
         avpPivot.position.set(0.1, 0.15, 0);
@@ -467,12 +463,12 @@ if (window.innerWidth >= 768) {
         if (!avpPivot) return;
         clearInterval(checkAVPScroll);
         gsap.fromTo(avpPivot.rotation, { y: 0 }, {
-            y: -Math.PI * 0.35,
+            y: -Math.PI * 1.5,
             ease: 'none',
             scrollTrigger: {
                 trigger: '#hero',
                 start: 'top top',
-                end: '40% top',
+                end: 'bottom -100%',
                 scrub: 0.8,
             }
         });
