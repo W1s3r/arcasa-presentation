@@ -148,7 +148,7 @@ renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
 camera.position.set(0, 1, 6);
-camera.lookAt(0, 0.5, 0);
+camera.lookAt(0, 0.5, 0); // centered on AVP
 
 // Lighting
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
@@ -189,7 +189,7 @@ async function loadAVP() {
         // Wrap in pivot group
         avpPivot = new THREE.Group();
         avpPivot.add(avpMesh);
-        avpPivot.position.set(0.5, 0.5, 0);
+        avpPivot.position.set(0, 0.5, 0);
         scene.add(avpPivot);
         console.log('AVP loaded');
     } catch (e) { console.warn('AVP load failed:', e); }
