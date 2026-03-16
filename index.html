@@ -964,6 +964,7 @@ async function loadModels() {
         const labGlb = await gltfLoader.loadAsync('assets/models/lab.glb');
         const labModel = normalize(labGlb.scene, 3);
         models.lab = labModel;
+        models.labNormScale = labModel.scale.x; // preserve normalized scale factor
 
         // Start scaled to 0 for build animation
         labModel.scale.set(0, 0, 0);
@@ -1222,7 +1223,7 @@ function updateModePanels(progress) {
                 pivot.position.set(2, -0.3 + (1 - e) * 3, 0); // rise from below
             } else if (localP > (1 - transOut) && i < totalModes - 1) {
                 const e = smoothstep((localP - (1 - transOut)) / transOut);
-                pivot.position.set(2, -0.3 - e * 3, 0); // drop down to exit
+                pivot.position.set(2, -0.3 + e * 3, 0); // rise up to exit
             } else {
                 pivot.position.set(2, -0.3, 0);
             }
@@ -1275,16 +1276,17 @@ ScrollTrigger.create({
         if (!models.lab) return;
 
         // Phase 1: Build animation (0 -> 0.2) — scale up + reveal spin
+        const ns = models.labNormScale || 1;
         if (p < 0.2) {
             const buildP = p / 0.2;
             const eased = 1 - Math.pow(1 - buildP, 3);
-            models.lab.scale.set(eased, eased, eased);
+            models.lab.scale.set(eased * ns, eased * ns, eased * ns);
             models.lab.rotation.y = -Math.PI * (1 - eased); // spin from -180° to 0°
             if (models.scanSpotlight) models.scanSpotlight.intensity = 0;
         }
         // Phase 2: Orbit (0.2 -> 0.5) — camera orbits, lab stays at rotation 0
         else if (p < 0.5) {
-            if (!dollhouseBuilt) { models.lab.scale.set(1,1,1); dollhouseBuilt = true; }
+            if (!dollhouseBuilt) { models.lab.scale.setScalar(ns); dollhouseBuilt = true; }
             const orbitP = (p - 0.2) / 0.3;
             const angle = orbitP * Math.PI * 1.2; // ~216° orbit
             const radius = 5;
@@ -1337,7 +1339,7 @@ ScrollTrigger.create({
     onEnterBack: () => {
         if (models.lab) {
             dollhouseBuilt = false;
-            models.lab.scale.set(0, 0, 0);
+            models.lab.scale.setScalar(0);
             models.lab.rotation.y = -Math.PI;
         }
     }
