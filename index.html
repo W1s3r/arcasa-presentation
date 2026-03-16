@@ -58,7 +58,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     color: var(--accent); margin-bottom: 36px; opacity: 0;
 }
 .hero-title {
-    font-family: var(--font-display); font-size: clamp(120px, 22vw, 300px);
+    font-family: var(--font-display); font-size: clamp(90px, 16vw, 220px);
     font-weight: 800; letter-spacing: -0.03em; line-height: 0.9;
     background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.5) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -189,7 +189,7 @@ async function loadAVP() {
         // Wrap in pivot group
         avpPivot = new THREE.Group();
         avpPivot.add(avpMesh);
-        avpPivot.position.set(-0.1, 0.5, 0);
+        avpPivot.position.set(0.1, 0.5, 0);
         // Start hidden — spin animation will reveal
         avpPivot.scale.setScalar(0);
         scene.add(avpPivot);
