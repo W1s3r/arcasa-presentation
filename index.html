@@ -219,7 +219,31 @@ function splitChars(el) {
 const heroTitle = document.querySelector('.hero-title[data-split]');
 const heroChars = splitChars(heroTitle);
 
-const entrance = gsap.timeline({ delay: 0.3 });
+// AVP spin-in: starts rotated away, spins to face camera
+let avpSpinDone = false;
+const avpSpinStart = -Math.PI * 0.8; // start rotated ~144° away
+const avpSpinEnd = 0;
+
+function startAVPSpin() {
+    if (!avpPivot) return;
+    avpPivot.rotation.y = avpSpinStart;
+    gsap.to(avpPivot.rotation, {
+        y: avpSpinEnd,
+        duration: 1.8,
+        ease: 'power3.out',
+        onComplete: () => { avpSpinDone = true; }
+    });
+    // Fade in the AVP via scale
+    avpPivot.scale.setScalar(0.6);
+    gsap.to(avpPivot.scale, {
+        x: 1, y: 1, z: 1,
+        duration: 1.4,
+        ease: 'power2.out',
+    });
+}
+
+// Text entrance — delayed until after AVP spin begins
+const entrance = gsap.timeline({ delay: 1.4 }); // wait for spin to mostly finish
 entrance
     .fromTo(heroChars,
         { y: 50, opacity: 0, rotateX: -60 },
@@ -229,6 +253,13 @@ entrance
     .fromTo('.hero-subtitle', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
     .fromTo('.hero-tags', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
     .fromTo('.scroll-hint', { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.2');
+
+// Kick off AVP spin as soon as model loads (or immediately if already loaded)
+function tryStartSpin() {
+    if (avpPivot) { startAVPSpin(); }
+    else { setTimeout(tryStartSpin, 100); }
+}
+setTimeout(tryStartSpin, 200);
 
 // ============================================================
 // RENDER LOOP
