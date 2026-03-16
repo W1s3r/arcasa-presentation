@@ -262,10 +262,13 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
 
 .mode-panel {
     position: absolute; inset: 0; display: flex; align-items: center;
-    padding: 100px 80px 80px; opacity: 0; transition: opacity 0.4s ease;
+    padding: 100px 80px 80px; opacity: 0;
     z-index: 2; pointer-events: none;
+    transform: translateY(100%);
+    will-change: transform, opacity;
 }
-.mode-panel.active { opacity: 1; pointer-events: auto; }
+.mode-panel.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.mode-panel.exiting-up { opacity: 0; transform: translateY(-60%); }
 .mode-text { width: 45%; max-width: 500px; }
 .mode-number {
     font-family: var(--font-display); font-weight: 800; font-size: 64px;
@@ -987,10 +990,18 @@ async function loadModels() {
             scanGroup.rotation.y = Math.PI * 0.3;
             models.scanPerson = scanGroup;
             labModel.add(scanGroup);
+
+            // Warm spotlight focused on scanning person (starts dim, intensifies during orbit)
+            const scanSpot = new THREE.SpotLight(0xffeedd, 0, 15, 0.8, 0.3);
+            scanSpot.position.set(0.3, 4, 0.5);
+            scanSpot.target.position.set(0.3, 0, 0.2);
+            labModel.add(scanSpot, scanSpot.target);
+            models.scanSpotlight = scanSpot;
+
             console.log('Scanning person loaded');
         } catch (e) { console.warn('Scanning person failed:', e); }
 
-        // Dollhouse lighting
+        // Dollhouse ambient lighting
         const dhSpot1 = new THREE.SpotLight(0xffffff, 4, 20, 0.6, 0.5);
         dhSpot1.position.set(3, 6, 5);
         dhSpot1.target.position.set(0, 0, 0);
@@ -1106,22 +1117,90 @@ ScrollTrigger.create({
 });
 
 // ============================================================
-// MODES SECTION (pinned crossfade + scroll-driven rotation)
+// MODES SECTION (pinned scroll-driven slide transitions)
 // ============================================================
 const modePanels = document.querySelectorAll('.mode-panel');
 const modeNavItems = document.querySelectorAll('.mode-nav-item');
 const modePivotNames = ['touchPivot', 'naturalPivot', 'powerPivot'];
 let currentMode = 0;
-let modeScrollProgress = 0; // track scroll for rotation
+let modeScrollProgress = 0;
 
-function setMode(index) {
-    if (index === currentMode) return;
-    currentMode = index;
-    modePanels.forEach((panel, i) => panel.classList.toggle('active', i === index));
-    modeNavItems.forEach((item, i) => item.classList.toggle('active', i === index));
-    modePivotNames.forEach((name, i) => {
-        if (models[name]) models[name].visible = (i === index);
+function updateModePanels(progress) {
+    // Each mode occupies 1/3 of the scroll. Within each third:
+    //   0-15%: transition zone (prev exits up, current enters from below)
+    //   15-85%: current panel fully visible
+    //   85-100%: transition zone (current starts exiting up, next starts entering)
+    const totalModes = 3;
+
+    modePanels.forEach((panel, i) => {
+        const modeStart = i / totalModes;
+        const modeEnd = (i + 1) / totalModes;
+        const modeMid = (modeStart + modeEnd) / 2;
+
+        // Normalize progress within this mode's range
+        const localP = (progress - modeStart) / (1 / totalModes); // 0..1 for this mode
+
+        if (progress < modeStart - 0.02) {
+            // Not yet reached — waiting below
+            panel.style.transform = 'translateY(100%)';
+            panel.style.opacity = '0';
+            panel.style.zIndex = '2';
+            panel.classList.remove('active', 'exiting-up');
+            panel.style.pointerEvents = 'none';
+        } else if (progress >= modeEnd + 0.02) {
+            // Already passed — gone above
+            panel.style.transform = 'translateY(-60%)';
+            panel.style.opacity = '0';
+            panel.style.zIndex = '2';
+            panel.classList.remove('active', 'exiting-up');
+            panel.style.pointerEvents = 'none';
+        } else {
+            // In or near this mode's zone
+            const transIn = 0.12;
+            const transOut = 0.12;
+
+            if (localP < 0) {
+                const t = (localP + transIn) / transIn;
+                const clamped = Math.max(0, Math.min(1, t));
+                const eased = clamped * clamped * (3 - 2 * clamped);
+                panel.style.transform = `translateY(${(1 - eased) * 100}%)`;
+                panel.style.opacity = `${eased}`;
+                panel.style.zIndex = '4'; // entering panel on top
+                panel.style.pointerEvents = 'none';
+            } else if (localP <= 1) {
+                if (localP < transIn) {
+                    const t = localP / transIn;
+                    const eased = t * t * (3 - 2 * t);
+                    panel.style.transform = `translateY(${(1 - eased) * 80}%)`;
+                    panel.style.opacity = `${eased}`;
+                    panel.style.zIndex = '4';
+                } else if (localP > (1 - transOut) && i < totalModes - 1) {
+                    const t = (localP - (1 - transOut)) / transOut;
+                    const eased = t * t * (3 - 2 * t);
+                    panel.style.transform = `translateY(${-eased * 60}%)`;
+                    panel.style.opacity = `${1 - eased}`;
+                    panel.style.zIndex = '3'; // exiting panel behind entering one
+                } else {
+                    panel.style.transform = 'translateY(0)';
+                    panel.style.opacity = '1';
+                    panel.style.zIndex = '5'; // fully active panel on top
+                }
+                panel.classList.add('active');
+                panel.classList.remove('exiting-up');
+                panel.style.pointerEvents = localP >= transIn && localP <= (1 - transOut) ? 'auto' : 'none';
+            }
+        }
     });
+
+    // Update nav indicators and 3D model visibility
+    const newMode = Math.min(Math.floor(progress * totalModes), totalModes - 1);
+    if (newMode !== currentMode) {
+        currentMode = newMode;
+        modeNavItems.forEach((item, i) => item.classList.toggle('active', i === newMode));
+        modePivotNames.forEach((name, i) => {
+            if (models[name]) models[name].visible = (i === newMode);
+        });
+    }
 }
 
 ScrollTrigger.create({
@@ -1132,12 +1211,15 @@ ScrollTrigger.create({
     onLeave: () => setScene('none'),
     onLeaveBack: () => setScene('none'),
     onUpdate: (self) => {
-        const index = Math.min(Math.floor(self.progress * 3), 2);
-        setMode(index);
-        // Store progress for scroll-driven rotation
         modeScrollProgress = self.progress;
+        updateModePanels(self.progress);
     }
 });
+
+// Initialize first mode panel visible
+modePanels[0].style.transform = 'translateY(0)';
+modePanels[0].style.opacity = '1';
+modePanels[0].style.pointerEvents = 'auto';
 
 // ============================================================
 // DOLLHOUSE VIEW (pinned scroll-driven build + orbit)
@@ -1173,19 +1255,44 @@ ScrollTrigger.create({
             }
         }
 
-        // Phase 2: Orbit camera (0.25 -> 1.0)
-        if (p >= 0.25) {
-            const orbitP = (p - 0.25) / 0.75;
-            // Full 360 orbit
-            const angle = orbitP * Math.PI * 2;
+        // Phase 2: Orbit camera (0.25 -> 0.7)
+        if (p >= 0.25 && p < 0.7) {
+            const orbitP = (p - 0.25) / 0.45;
+            // 270° orbit
+            const angle = orbitP * Math.PI * 1.5;
             const radius = 5;
-            const camY = 3.5 - orbitP * 1.5; // lower camera as we orbit
+            const camY = 3.5 - orbitP * 1.0;
             camPos.set(
                 Math.sin(angle) * radius,
                 camY,
                 Math.cos(angle) * radius
             );
             camTarget.set(0, 0, 0);
+            // Dim scan spotlight during orbit
+            if (models.scanSpotlight) models.scanSpotlight.intensity = orbitP * 2;
+        }
+
+        // Phase 3: Zoom into scanning person (0.7 -> 1.0)
+        if (p >= 0.7) {
+            const zoomP = (p - 0.7) / 0.3;
+            const eased = zoomP * zoomP * (3 - 2 * zoomP);
+            // Sweep from orbit end position to close-up on scan person
+            const startCam = [Math.sin(Math.PI * 1.5) * 5, 2.5, Math.cos(Math.PI * 1.5) * 5];
+            const endCam = [1.3, 0.15, 0.6];
+            const startTgt = [0, 0, 0];
+            const endTgt = [0.6, -0.1, 0.2];
+            camPos.set(
+                startCam[0] + (endCam[0] - startCam[0]) * eased,
+                startCam[1] + (endCam[1] - startCam[1]) * eased,
+                startCam[2] + (endCam[2] - startCam[2]) * eased
+            );
+            camTarget.set(
+                startTgt[0] + (endTgt[0] - startTgt[0]) * eased,
+                startTgt[1] + (endTgt[1] - startTgt[1]) * eased,
+                startTgt[2] + (endTgt[2] - startTgt[2]) * eased
+            );
+            // Intensify scan spotlight as we zoom in
+            if (models.scanSpotlight) models.scanSpotlight.intensity = 2 + eased * 6;
         }
     }
 });
