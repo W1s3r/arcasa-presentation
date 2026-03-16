@@ -288,44 +288,31 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
 }
 .mode-visual { width: 55%; }
 
-/* ============ SWITCH EXPLODE ============ */
-#switch-explode { height: 100vh; position: relative; background: transparent; }
-#switch-explode::before {
+/* ============ DOLLHOUSE VIEW (pinned) ============ */
+#dollhouse-view {
+    height: 100vh; position: relative; background: transparent; overflow: hidden;
+}
+#dollhouse-view::before {
     content: ''; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 50%, rgba(5,5,8,0.2) 0%, rgba(5,5,8,0.7) 60%, rgba(5,5,8,0.95) 100%);
+    background: radial-gradient(ellipse at 50% 50%, rgba(5,5,8,0.15) 0%, rgba(5,5,8,0.65) 55%, rgba(5,5,8,0.95) 100%);
     z-index: 1;
 }
-.switch-info {
-    position: absolute; top: 50%; right: 80px; transform: translateY(-50%);
-    z-index: 10; width: 220px;
+.dollhouse-overlay {
+    position: absolute; bottom: 80px; left: 80px; z-index: 10; max-width: 400px;
 }
-.switch-labels { display: flex; flex-direction: column; gap: 20px; }
-.switch-label-item {
-    display: flex; align-items: center; gap: 12px;
-    font-family: var(--font-body); font-size: 14px; color: var(--text-muted);
-    opacity: 0; transform: translateX(20px);
-    transition: opacity 0.4s, transform 0.4s, color 0.3s;
-}
-.switch-label-item.visible { opacity: 1; transform: translateX(0); }
-.switch-label-item.active { color: var(--text); }
-.switch-label-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--accent); opacity: 0.4; transition: opacity 0.3s;
-}
-.switch-label-item.active .switch-label-dot { opacity: 1; }
-.switch-progress {
-    margin-top: 32px; width: 100%; height: 2px;
+.dollhouse-overlay .section-label { margin-bottom: 8px; }
+.dollhouse-overlay h3 { font-size: 28px; color: var(--text); margin-bottom: 12px; }
+.dollhouse-overlay p { font-size: 15px; }
+.dollhouse-progress {
+    margin-top: 24px; width: 200px; height: 2px;
     background: rgba(255,255,255,0.06); border-radius: 1px; overflow: hidden;
 }
-.switch-progress-fill {
+.dollhouse-progress-fill {
     height: 100%; width: 0; border-radius: 1px;
     background: linear-gradient(90deg, var(--accent), var(--accent-2));
 }
-.switch-explode-title { position: absolute; top: 48px; left: 80px; z-index: 10; }
-.switch-explode-title .section-label { margin-bottom: 8px; }
-.switch-explode-title h3 { font-size: 28px; color: var(--text); }
 
-/* ============ DOLLHOUSE ============ */
+/* ============ DOLLHOUSE DETAIL ============ */
 .split-layout { display: flex; gap: 80px; align-items: center; }
 .split-left { flex: 1; }
 .split-right { flex: 1; min-height: 400px; }
@@ -397,8 +384,7 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
     .nav-links { display: none; }
     .section-inner { padding: 80px 24px; }
     .hero-tags { flex-wrap: wrap; }
-    .switch-info { right: 24px; width: 180px; }
-    .switch-explode-title { left: 24px; }
+    .dollhouse-overlay { left: 24px; bottom: 24px; }
     .mode-panel { padding: 100px 24px 80px; }
     .team-row { gap: 24px; }
 }
@@ -419,7 +405,6 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
     <a class="nav-logo" href="#">SMART</a>
     <div class="nav-links">
         <a href="#modes">Modes</a>
-        <a href="#switchfinity">Hardware</a>
         <a href="#dollhouse">Dollhouse</a>
         <a href="#team">Team</a>
     </div>
@@ -588,67 +573,7 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
         </div>
     </section>
 
-    <!-- ====== SWITCHFINITY INTRO ====== -->
-    <section id="switchfinity" class="section-divider">
-        <div class="divider-content">
-            <div class="section-label">MODULAR HARDWARE</div>
-            <h2 class="big-title reveal-text">SwitchFinity</h2>
-            <p class="divider-sub reveal-up">A modular, grid-based physical control interface for our spatial XR ecosystem</p>
-        </div>
-    </section>
-
-    <!-- ====== SWITCH EXPLODE (pinned) ====== -->
-    <section id="switch-explode">
-        <div class="switch-explode-title" style="z-index:10;">
-            <div class="section-label">INSIDE THE BUILD</div>
-            <h3>Scroll to Explore</h3>
-        </div>
-        <div class="switch-info">
-            <div class="switch-labels">
-                <div class="switch-label-item" data-layer="knob">
-                    <span class="switch-label-dot"></span>
-                    <span>Switch Knobs</span>
-                </div>
-                <div class="switch-label-item" data-layer="module">
-                    <span class="switch-label-dot"></span>
-                    <span>Signal Modules</span>
-                </div>
-                <div class="switch-label-item" data-layer="housing">
-                    <span class="switch-label-dot"></span>
-                    <span>3D-Printed Housing</span>
-                </div>
-                <div class="switch-label-item" data-layer="pcb">
-                    <span class="switch-label-dot"></span>
-                    <span>PCB + ESP32</span>
-                </div>
-            </div>
-            <div class="switch-progress">
-                <div class="switch-progress-fill"></div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ====== SWITCH DETAILS ====== -->
-    <section id="switch-details" class="section-solid">
-        <div class="section-inner">
-            <div class="cards-row three-col">
-                <div class="glass-card reveal-up">
-                    <h3>Plug &amp; Play</h3>
-                    <p>Hot-swappable modules with auto-detection via magnetic + pogo-pin alignment</p>
-                </div>
-                <div class="glass-card reveal-up" data-delay="0.1">
-                    <h3>Gridfinity Base</h3>
-                    <p>Compatible with the open-source Gridfinity modular grid system for flexible layouts</p>
-                </div>
-                <div class="glass-card reveal-up" data-delay="0.2">
-                    <h3>MQTT Connected</h3>
-                    <p>Wi-Fi enabled ESP32 handles real-time messaging and module coordination</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ====== DOLLHOUSE ====== -->
+    <!-- ====== DOLLHOUSE INTRO ====== -->
     <section id="dollhouse" class="section-divider">
         <div class="divider-content">
             <div class="section-label">SPATIAL SCANNING</div>
@@ -657,6 +582,19 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
         </div>
     </section>
 
+    <!-- ====== DOLLHOUSE 3D VIEW (pinned scroll-driven) ====== -->
+    <section id="dollhouse-view">
+        <div class="dollhouse-overlay">
+            <div class="section-label">INTERACTIVE MODEL</div>
+            <h3>Scroll to Orbit</h3>
+            <p>The iPhone companion app uses RoomPlan to scan your home, then renders a controllable miniature on Vision Pro.</p>
+            <div class="dollhouse-progress">
+                <div class="dollhouse-progress-fill"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====== DOLLHOUSE DETAIL ====== -->
     <section id="dollhouse-detail" class="section-solid">
         <div class="section-inner split-layout">
             <div class="split-left">
@@ -796,7 +734,7 @@ scene.add(rimLight);
 
 // Scene groups
 const groups = {};
-['hero', 'modes', 'switch'].forEach(name => {
+['hero', 'modes', 'dollhouse'].forEach(name => {
     const g = new THREE.Group();
     g.visible = false;
     scene.add(g);
@@ -824,10 +762,10 @@ function normalize(m, size = 3) {
 // ============================================================
 let activeScene = 'hero';
 const sceneStates = {
-    hero:   { cam: [0, 1, 6],    look: [0, 0.5, 0] },
-    modes:  { cam: [1.5, 1, 7],  look: [1.5, 0.5, 0] },
-    switch: { cam: [0, 0.8, 5],  look: [0, 0.3, 0] },
-    none:   { cam: [0, 1, 6],    look: [0, 0.5, 0] },
+    hero:      { cam: [0, 1, 6],      look: [0, 0.5, 0] },
+    modes:     { cam: [1.5, 1, 7],    look: [1.5, 0.5, 0] },
+    dollhouse: { cam: [3, 3.5, 5],    look: [0, 0, 0] },
+    none:      { cam: [0, 1, 6],      look: [0, 0.5, 0] },
 };
 
 function setScene(name) {
@@ -836,6 +774,130 @@ function setScene(name) {
     camTarget.set(...state.look);
     Object.keys(groups).forEach(k => { groups[k].visible = (k === name); });
     activeScene = name;
+}
+
+// ============================================================
+// MODE UI ELEMENTS (digital windows/panels)
+// ============================================================
+function createModeUI(type, personModel) {
+    const uiGroup = new THREE.Group();
+    // Scale factor based on person model size
+    const bbox = new THREE.Box3().setFromObject(personModel);
+    const height = bbox.getSize(new THREE.Vector3()).y;
+    const s = height / 3.5; // normalize to expected height
+
+    const panelMat = new THREE.MeshStandardMaterial({
+        color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 0.3,
+        transparent: true, opacity: 0.7, side: THREE.DoubleSide
+    });
+    const panelMatAlt = new THREE.MeshStandardMaterial({
+        color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.2,
+        transparent: true, opacity: 0.5, side: THREE.DoubleSide
+    });
+
+    if (type === 'touch') {
+        // Panels near the figure's right side
+        const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMat);
+        panel.position.set(-0.5 * s, 1.2 * s, 0.8 * s);
+        panel.lookAt(0, 1.2 * s, 0);
+        uiGroup.add(panel);
+
+        const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(0.6 * s, 0.4 * s), panelMatAlt);
+        panel2.position.set(-0.7 * s, 0.9 * s, 0.6 * s);
+        panel2.lookAt(0, 0.9 * s, 0);
+        uiGroup.add(panel2);
+
+        // Fingertip glow dots
+        const glowMat = new THREE.MeshStandardMaterial({
+            color: 0x6366f1, emissive: 0x6366f1, emissiveIntensity: 1.0,
+            transparent: true, opacity: 0.9
+        });
+        [[-0.45 * s, 1.1 * s, 0.75 * s], [-0.6 * s, 1.0 * s, 0.7 * s], [-0.5 * s, 0.85 * s, 0.65 * s]].forEach(p => {
+            const dot = new THREE.Mesh(new THREE.SphereGeometry(0.06 * s, 12, 12), glowMat);
+            dot.position.set(...p);
+            uiGroup.add(dot);
+        });
+
+    } else if (type === 'natural') {
+        // Panels at a distance in front
+        const panel1 = new THREE.Mesh(new THREE.PlaneGeometry(1.6 * s, 1.0 * s), panelMat);
+        panel1.position.set(0.3 * s, 1.2 * s, 3.0 * s);
+        uiGroup.add(panel1);
+
+        const panel2 = new THREE.Mesh(new THREE.PlaneGeometry(1.0 * s, 0.7 * s), panelMatAlt);
+        panel2.position.set(-1.5 * s, 1.0 * s, 2.5 * s);
+        panel2.rotation.y = -0.4;
+        uiGroup.add(panel2);
+
+        const panel3 = new THREE.Mesh(new THREE.PlaneGeometry(0.8 * s, 0.6 * s), panelMatAlt);
+        panel3.position.set(1.8 * s, 1.4 * s, 2.6 * s);
+        panel3.rotation.y = 0.3;
+        uiGroup.add(panel3);
+
+        // Gaze ray from eye toward panel2
+        const rayMat = new THREE.MeshStandardMaterial({
+            color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.8,
+            transparent: true, opacity: 0.35
+        });
+        const eyePos = new THREE.Vector3(-0.15 * s, 1.2 * s, 0.2 * s);
+        const targetPos = new THREE.Vector3(-1.5 * s, 1.0 * s, 2.5 * s);
+        const rayDir = new THREE.Vector3().subVectors(targetPos, eyePos);
+        const rayLen = rayDir.length();
+        const rayMid = eyePos.clone().add(targetPos).multiplyScalar(0.5);
+        const ray = new THREE.Mesh(new THREE.CylinderGeometry(0.015 * s, 0.015 * s, rayLen, 8), rayMat);
+        ray.position.copy(rayMid);
+        ray.lookAt(targetPos);
+        ray.rotateX(Math.PI / 2);
+        uiGroup.add(ray);
+
+    } else if (type === 'power') {
+        // Hand spheres
+        const handR = new THREE.Mesh(new THREE.SphereGeometry(0.12 * s, 16, 16), panelMat);
+        handR.position.set(-0.3 * s, 1.0 * s, 0.4 * s);
+        uiGroup.add(handR);
+
+        const handL = new THREE.Mesh(new THREE.SphereGeometry(0.12 * s, 16, 16), panelMat);
+        handL.position.set(0.3 * s, 0.9 * s, 0.4 * s);
+        uiGroup.add(handL);
+
+        // Distant panels
+        const farPositions = [
+            [2.5 * s, 1.8 * s, 2.0 * s], [-2.5 * s, 1.6 * s, 2.0 * s],
+            [1.5 * s, 0.8 * s, 3.0 * s], [-1.5 * s, 2.0 * s, 2.5 * s],
+            [0, 2.2 * s, 2.5 * s], [3.0 * s, 1.0 * s, 1.0 * s],
+        ];
+        farPositions.forEach((p, i) => {
+            const size = (0.5 + Math.random() * 0.4) * s;
+            const mat = i % 2 === 0 ? panelMat.clone() : panelMatAlt.clone();
+            const panel = new THREE.Mesh(new THREE.PlaneGeometry(size, size * 0.7), mat);
+            panel.position.set(...p);
+            panel.lookAt(0, 1.0 * s, 0);
+            uiGroup.add(panel);
+        });
+
+        // Connection lines from hands to panels
+        const lineMat = new THREE.MeshStandardMaterial({
+            color: 0x8b5cf6, emissive: 0x8b5cf6, emissiveIntensity: 0.6,
+            transparent: true, opacity: 0.3
+        });
+        const handPositions = [
+            new THREE.Vector3(-0.3 * s, 1.0 * s, 0.4 * s),
+            new THREE.Vector3(0.3 * s, 0.9 * s, 0.4 * s)
+        ];
+        farPositions.forEach((fp, i) => {
+            const hand = handPositions[i % 2];
+            const far = new THREE.Vector3(...fp);
+            const mid = hand.clone().add(far).multiplyScalar(0.5);
+            const len = hand.distanceTo(far);
+            const line = new THREE.Mesh(new THREE.CylinderGeometry(0.012 * s, 0.012 * s, len, 4), lineMat);
+            line.position.copy(mid);
+            line.lookAt(far);
+            line.rotateX(Math.PI / 2);
+            uiGroup.add(line);
+        });
+    }
+
+    return uiGroup;
 }
 
 // ============================================================
@@ -854,35 +916,7 @@ async function loadModels() {
         console.log('AVP loaded');
     } catch (e) { console.warn('AVP load failed:', e); }
 
-    // Switch box
-    try {
-        const sw = await gltfLoader.loadAsync('assets/models/switchbox.glb');
-        const swNorm = normalize(sw.scene, 3);
-        swNorm.traverse(child => {
-            if (child.isMesh && child.material) {
-                child.material.roughness = 0.5;
-                child.material.metalness = 0.2;
-            }
-        });
-        const swPivot = new THREE.Group();
-        swPivot.add(swNorm);
-        models.switchBox = swPivot;
-        groups.switch.add(swPivot);
-
-        const sp1 = new THREE.SpotLight(0xffffff, 4, 20, 0.6, 0.5);
-        sp1.position.set(3, 6.5, 5);
-        sp1.target = swPivot;
-        groups.switch.add(sp1, sp1.target);
-        const sp2 = new THREE.SpotLight(0xddeeff, 2, 20, 0.6, 0.5);
-        sp2.position.set(-3, 5.5, 3);
-        sp2.target = swPivot;
-        groups.switch.add(sp2, sp2.target);
-
-        setupSwitchExplode(swPivot);
-        console.log('Switch box loaded');
-    } catch (e) { console.warn('Switch load failed:', e); }
-
-    // Mode figures
+    // Mode figures + UI elements
     try {
         const [touchGlb, naturalGlb, powerGlb] = await Promise.all([
             gltfLoader.loadAsync('assets/models/TouchMode.glb'),
@@ -893,70 +927,84 @@ async function loadModels() {
         models.natural = normalize(naturalGlb.scene, 3.5);
         models.power = normalize(powerGlb.scene, 3.5);
 
-        [models.touch, models.natural, models.power].forEach(m => {
-            m.position.set(2, -0.3, 0);
-            m.visible = false;
-            groups.modes.add(m);
+        const modeTypes = ['touch', 'natural', 'power'];
+        [models.touch, models.natural, models.power].forEach((m, i) => {
+            // Wrap each model + its UI in a pivot group for scroll-driven rotation
+            const pivot = new THREE.Group();
+            pivot.position.set(2, -0.3, 0);
+
+            m.position.set(0, 0, 0); // reset; pivot handles offset
+            pivot.add(m);
+
+            // Create and add the digital UI elements
+            const ui = createModeUI(modeTypes[i], m);
+            pivot.add(ui);
+            models[modeTypes[i] + 'UI'] = ui;
+
+            pivot.visible = false;
+            groups.modes.add(pivot);
+            models[modeTypes[i] + 'Pivot'] = pivot;
         });
-        models.touch.visible = true;
+        models.touchPivot.visible = true;
 
         const modeSpot = new THREE.SpotLight(0xeeeeff, 3, 12, 0.5, 0.7);
         modeSpot.position.set(2, 5, 3);
         modeSpot.target.position.set(2, 0, 0);
         groups.modes.add(modeSpot, modeSpot.target);
 
-        console.log('Mode figures loaded');
+        console.log('Mode figures + UI loaded');
     } catch (e) { console.warn('Mode figures failed:', e); }
+
+    // Dollhouse (lab model)
+    try {
+        const labGlb = await gltfLoader.loadAsync('assets/models/lab.glb');
+        const labModel = normalize(labGlb.scene, 3);
+        models.lab = labModel;
+
+        // Start scaled to 0 for build animation
+        labModel.scale.set(0, 0, 0);
+        labModel.rotation.y = -Math.PI;
+        groups.dollhouse.add(labModel);
+
+        // Scanning person inside the lab
+        try {
+            const scanGlb = await gltfLoader.loadAsync('assets/models/Scanning.glb');
+            const scanScene = scanGlb.scene;
+            const scanBbox = new THREE.Box3().setFromObject(scanScene);
+            const scanHeight = scanBbox.getSize(new THREE.Vector3()).y;
+            const targetHeight = 1.65;
+            const scaleFactor = targetHeight / scanHeight;
+            scanScene.scale.setScalar(scaleFactor);
+            const scanCenter = scanBbox.getCenter(new THREE.Vector3());
+            scanScene.position.set(
+                -scanCenter.x * scaleFactor,
+                -scanBbox.min.y * scaleFactor,
+                -scanCenter.z * scaleFactor
+            );
+            const scanGroup = new THREE.Group();
+            scanGroup.add(scanScene);
+            scanGroup.position.set(0.3, -1.3, 0.2);
+            scanGroup.rotation.y = Math.PI * 0.3;
+            models.scanPerson = scanGroup;
+            labModel.add(scanGroup);
+            console.log('Scanning person loaded');
+        } catch (e) { console.warn('Scanning person failed:', e); }
+
+        // Dollhouse lighting
+        const dhSpot1 = new THREE.SpotLight(0xffffff, 4, 20, 0.6, 0.5);
+        dhSpot1.position.set(3, 6, 5);
+        dhSpot1.target.position.set(0, 0, 0);
+        groups.dollhouse.add(dhSpot1, dhSpot1.target);
+        const dhSpot2 = new THREE.SpotLight(0xddeeff, 2, 20, 0.6, 0.5);
+        dhSpot2.position.set(-3, 5, 3);
+        dhSpot2.target.position.set(0, 0, 0);
+        groups.dollhouse.add(dhSpot2, dhSpot2.target);
+
+        console.log('Dollhouse loaded');
+    } catch (e) { console.warn('Dollhouse load failed:', e); }
 }
 
 loadModels();
-
-// ============================================================
-// SWITCH BOX EXPLODE
-// ============================================================
-let switchExplodeData = null;
-
-function setupSwitchExplode(model) {
-    const parts = [];
-    const bbox = new THREE.Box3();
-
-    model.traverse(child => {
-        if (child.isMesh) {
-            child.geometry.computeBoundingBox();
-            const meshBB = child.geometry.boundingBox.clone();
-            meshBB.translate(child.position);
-            bbox.union(meshBB);
-            parts.push({ mesh: child, origPos: child.position.clone() });
-        }
-    });
-
-    const size = bbox.getSize(new THREE.Vector3());
-    const center = bbox.getCenter(new THREE.Vector3());
-
-    let axis = 'z';
-    if (size.x <= size.y && size.x <= size.z) axis = 'x';
-    else if (size.y <= size.x && size.y <= size.z) axis = 'y';
-
-    const maxExtent = size[axis] * 0.5 || 1;
-    parts.forEach(p => {
-        p.mesh.geometry.computeBoundingBox();
-        const mc = p.mesh.geometry.boundingBox.getCenter(new THREE.Vector3());
-        mc.add(p.mesh.position);
-        p.axisOffset = (mc[axis] - center[axis]) / maxExtent;
-    });
-
-    const spreadDistance = size[axis] * 6;
-    switchExplodeData = { parts, axis, spreadDistance };
-}
-
-function updateSwitchExplode(progress) {
-    if (!switchExplodeData) return;
-    const { parts, axis, spreadDistance } = switchExplodeData;
-    const eased = progress * progress * (3 - 2 * progress);
-    parts.forEach(p => {
-        p.mesh.position[axis] = p.origPos[axis] + p.axisOffset * spreadDistance * eased;
-    });
-}
 
 // ============================================================
 // HERO ENTRANCE ANIMATION
@@ -1048,8 +1096,7 @@ gsap.utils.toArray('.reveal-up').forEach(el => {
 });
 
 // ============================================================
-// SCENE SWITCHING — integrated into pinned triggers below
-// Hero uses its own non-pinned trigger
+// SCENE SWITCHING — Hero non-pinned trigger
 // ============================================================
 ScrollTrigger.create({
     trigger: '#hero', start: 'top top', end: 'bottom top',
@@ -1059,19 +1106,20 @@ ScrollTrigger.create({
 });
 
 // ============================================================
-// MODES SECTION (pinned crossfade)
+// MODES SECTION (pinned crossfade + scroll-driven rotation)
 // ============================================================
 const modePanels = document.querySelectorAll('.mode-panel');
 const modeNavItems = document.querySelectorAll('.mode-nav-item');
-const modeModelNames = ['touch', 'natural', 'power'];
+const modePivotNames = ['touchPivot', 'naturalPivot', 'powerPivot'];
 let currentMode = 0;
+let modeScrollProgress = 0; // track scroll for rotation
 
 function setMode(index) {
     if (index === currentMode) return;
     currentMode = index;
     modePanels.forEach((panel, i) => panel.classList.toggle('active', i === index));
     modeNavItems.forEach((item, i) => item.classList.toggle('active', i === index));
-    modeModelNames.forEach((name, i) => {
+    modePivotNames.forEach((name, i) => {
         if (models[name]) models[name].visible = (i === index);
     });
 }
@@ -1086,33 +1134,70 @@ ScrollTrigger.create({
     onUpdate: (self) => {
         const index = Math.min(Math.floor(self.progress * 3), 2);
         setMode(index);
+        // Store progress for scroll-driven rotation
+        modeScrollProgress = self.progress;
     }
 });
 
 // ============================================================
-// SWITCH EXPLODE (pinned scroll-driven)
+// DOLLHOUSE VIEW (pinned scroll-driven build + orbit)
 // ============================================================
-const switchLabels = document.querySelectorAll('.switch-label-item');
-const switchFill = document.querySelector('.switch-progress-fill');
+const dhFill = document.querySelector('.dollhouse-progress-fill');
+let dollhouseBuilt = false;
 
 ScrollTrigger.create({
-    trigger: '#switch-explode', start: 'top top', end: '+=250%',
+    trigger: '#dollhouse-view', start: 'top top', end: '+=350%',
     pin: true, scrub: true,
-    onEnter: () => setScene('switch'),
-    onEnterBack: () => setScene('switch'),
+    onEnter: () => setScene('dollhouse'),
+    onEnterBack: () => setScene('dollhouse'),
     onLeave: () => setScene('none'),
     onLeaveBack: () => setScene('none'),
     onUpdate: (self) => {
         const p = self.progress;
-        updateSwitchExplode(p);
-        if (switchFill) switchFill.style.width = `${p * 100}%`;
-        switchLabels.forEach((label, i) => {
-            const threshold = (i + 1) * 0.2;
-            label.classList.toggle('visible', p > threshold);
-            label.classList.toggle('active', p > threshold && p < threshold + 0.25);
-        });
-        if (models.switchBox) {
-            models.switchBox.rotation.y = p * Math.PI * 0.15;
+        if (dhFill) dhFill.style.width = `${p * 100}%`;
+
+        if (!models.lab) return;
+
+        // Phase 1: Build animation (0 -> 0.25)
+        if (p < 0.25) {
+            const buildP = p / 0.25;
+            const eased = 1 - Math.pow(1 - buildP, 3); // ease out cubic
+            const scale = eased;
+            models.lab.scale.set(scale, scale, scale);
+            models.lab.rotation.y = -Math.PI * (1 - eased);
+        } else {
+            // Ensure fully built
+            if (!dollhouseBuilt) {
+                models.lab.scale.set(1, 1, 1);
+                dollhouseBuilt = true;
+            }
+        }
+
+        // Phase 2: Orbit camera (0.25 -> 1.0)
+        if (p >= 0.25) {
+            const orbitP = (p - 0.25) / 0.75;
+            // Full 360 orbit
+            const angle = orbitP * Math.PI * 2;
+            const radius = 5;
+            const camY = 3.5 - orbitP * 1.5; // lower camera as we orbit
+            camPos.set(
+                Math.sin(angle) * radius,
+                camY,
+                Math.cos(angle) * radius
+            );
+            camTarget.set(0, 0, 0);
+        }
+    }
+});
+
+// Reset dollhouse on scroll back
+ScrollTrigger.create({
+    trigger: '#dollhouse-view', start: 'top bottom', end: 'top top',
+    onEnterBack: () => {
+        if (models.lab) {
+            dollhouseBuilt = false;
+            models.lab.scale.set(0, 0, 0);
+            models.lab.rotation.y = -Math.PI;
         }
     }
 });
@@ -1166,15 +1251,26 @@ function animate() {
     camera.lookAt(camLookAt);
 
     const t = clock.getElapsedTime();
+
+    // Hero: gentle idle spin
     if (activeScene === 'hero' && models.avp) {
         models.avp.rotation.y += 0.002;
     }
+
+    // Modes: scroll-driven rotation (full Y rotation mapped to scroll within each mode)
     if (activeScene === 'modes') {
-        const active = models[modeModelNames[currentMode]];
-        if (active) active.rotation.y = Math.sin(t * 0.3) * 0.15;
+        const activePivot = models[modePivotNames[currentMode]];
+        if (activePivot) {
+            // Each mode gets 1/3 of scroll. Map sub-progress to rotation.
+            const modeLocalP = (modeScrollProgress * 3) - currentMode; // 0..1 within current mode
+            const clamped = Math.max(0, Math.min(1, modeLocalP));
+            activePivot.rotation.y = clamped * Math.PI * 0.6 - Math.PI * 0.1; // -18deg to +90deg sweep
+        }
     }
-    if (activeScene === 'switch' && models.switchBox) {
-        models.switchBox.rotation.x = Math.sin(t * 0.5) * 0.02;
+
+    // Dollhouse: gentle float
+    if (activeScene === 'dollhouse' && models.lab) {
+        models.lab.position.y = Math.sin(t * 0.5) * 0.05;
     }
 
     renderer.render(scene, camera);
