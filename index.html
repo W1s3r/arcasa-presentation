@@ -1180,13 +1180,17 @@ function smoothstep(t) { return t * t * (3 - 2 * t); }
 
 function updateModePanels(progress) {
     const totalModes = 3;
-    const transIn = 0.12;  // 12% of each mode's range for enter
+    const transIn = 0.25;  // 25% of each mode's range for enter (slower, smoother)
     const transOut = 0.15; // 15% for exit
+    // First mode starts entering earlier — offset so it's already partway in at progress=0
+    const firstModeHead = 0.08; // 8% head start for first mode
 
     modePanels.forEach((panel, i) => {
         const modeStart = i / totalModes;
         const modeEnd = (i + 1) / totalModes;
-        const localP = (progress - modeStart) / (1 / totalModes); // 0..1
+        let localP = (progress - modeStart) / (1 / totalModes); // 0..1
+        // Give first mode a head start so it begins entering immediately
+        if (i === 0) localP += firstModeHead;
 
         // --- Panel slide animation ---
         if (localP < 0) {
@@ -1205,7 +1209,7 @@ function updateModePanels(progress) {
             panel.style.transform = `translateY(${(1 - e) * 80}%)`;
             panel.style.opacity = `${e}`;
             panel.style.zIndex = '4';
-            panel.style.pointerEvents = 'none';
+            panel.style.pointerEvents = e > 0.8 ? 'auto' : 'none';
         } else if (localP > (1 - transOut)) {
             // Exiting (all modes including last)
             const e = smoothstep((localP - (1 - transOut)) / transOut);
@@ -1251,7 +1255,9 @@ function updateModePanels(progress) {
         const pivot = models[name];
         if (!pivot) return;
         const modeStart = i / totalModes;
-        const localP = (progress - modeStart) / (1 / totalModes);
+        let localP = (progress - modeStart) / (1 / totalModes);
+        // First mode gets same head start as its panel
+        if (i === 0) localP += firstModeHead;
 
         pivot.visible = true;
         // Slide Y position: enter from below, exit upward — always positioned, never hidden
