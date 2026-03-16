@@ -69,6 +69,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.5) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
+.hero-title .split-char.accent {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+@keyframes accentPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
 .hero-subtitle {
     font-family: var(--font-body); font-weight: 300; font-size: clamp(26px, 3.5vw, 40px);
     color: var(--text-muted); margin-top: 32px; opacity: 0;
@@ -285,7 +294,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <section id="solution" class="section-solid">
     <div class="section-inner">
         <div class="section-label reveal">THE SOLUTION</div>
-        <h2 class="solution-headline reveal">What if your smart home had an interface that was actually <em>"smart"?</em></h2>
+        <h2 class="solution-headline reveal" style="text-align:center;">What if your smart home had an interface<br>that was actually <em>SMART</em>?</h2>
         <p class="solution-sub reveal">Arcasa is a spatial smart home platform for Apple Vision Pro. Walk into any room and see your entire home — every device, every sensor, every scene — rendered as an interactive 3D environment you control with your eyes and hands.</p>
 
         <div class="solution-features">
@@ -415,6 +424,7 @@ function splitChars(el) {
 
 const heroTitle = document.querySelector('.hero-title[data-split]');
 const heroChars = splitChars(heroTitle);
+const arChars = heroChars.filter(span => span.textContent === 'A' || span.textContent === 'R');
 
 // AVP spin-in: starts fully rotated away, does a full dramatic spin to face camera
 function startAVPSpin() {
@@ -450,7 +460,13 @@ textEntrance
     .fromTo('.hero-label', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.4')
     .fromTo('.hero-subtitle', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
     .fromTo('.hero-tags', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
-    .fromTo('.scroll-hint', { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.2');
+    .fromTo('.scroll-hint', { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.2')
+    .add(() => {
+        arChars.forEach(span => {
+            span.classList.add('accent');
+            span.style.animation = 'accentPulse 0.4s ease-out';
+        });
+    }, '-=0.3');
 
 // ============================================================
 // SCROLL REVEALS
