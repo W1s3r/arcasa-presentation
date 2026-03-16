@@ -168,8 +168,73 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     color: var(--text-muted); letter-spacing: 1px;
 }
 
+/* ============ SOLUTION ============ */
+#solution .solution-headline {
+    font-family: var(--font-display); font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700; line-height: 1.1; margin-bottom: 28px; color: var(--text);
+}
+#solution .solution-headline em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+#solution .solution-sub {
+    font-size: 20px; color: var(--text-muted); max-width: 780px;
+    line-height: 1.7; margin-bottom: 80px;
+}
+
+.solution-pillars {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+    margin-bottom: 80px;
+}
+.pillar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 48px 36px; position: relative; overflow: hidden;
+    transition: border-color 0.4s;
+}
+.pillar:hover { border-color: rgba(129,140,248,0.2); }
+.pillar::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(129,140,248,0.15), transparent);
+}
+.pillar-icon {
+    width: 48px; height: 48px; border-radius: 12px; margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(129,140,248,0.15), rgba(167,139,250,0.1));
+    border: 1px solid rgba(129,140,248,0.2);
+}
+.pillar-icon svg { width: 24px; height: 24px; }
+.pillar h3 {
+    font-family: var(--font-display); font-size: 22px; font-weight: 700;
+    color: var(--text); margin-bottom: 8px;
+}
+.pillar .pillar-tag {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    display: block;
+}
+.pillar p {
+    font-size: 15px; color: var(--text-muted); line-height: 1.7;
+}
+
+.solution-cta {
+    text-align: center; padding: 64px 0 0;
+    border-top: 1px solid var(--border);
+}
+.solution-cta p {
+    font-family: var(--font-body); font-size: clamp(22px, 3vw, 32px);
+    font-weight: 300; color: var(--text); line-height: 1.5;
+}
+.solution-cta em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    font-weight: 500;
+}
+
 @media (max-width: 768px) {
     .problem-stats { grid-template-columns: 1fr; }
+    .solution-pillars { grid-template-columns: 1fr; }
     .section-inner { padding: 80px 24px; }
 }
     </style>
@@ -224,6 +289,55 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
         <div class="problem-quote reveal">
             <blockquote>"The future of the home isn't more devices — it's finally making the ones we have feel like they belong together."</blockquote>
             <cite>— SMART founding thesis</cite>
+        </div>
+    </div>
+</section>
+
+<!-- ====== SOLUTION ====== -->
+<section id="solution" class="section-solid">
+    <div class="section-inner">
+        <div class="section-label reveal">THE SOLUTION</div>
+        <h2 class="solution-headline reveal">What if your home had <em>an interface worthy of it?</em></h2>
+        <p class="solution-sub reveal">Arcasa is a spatial smart home platform for Apple Vision Pro. Walk into any room and see your entire home — every device, every sensor, every scene — rendered as an interactive 3D environment you control with your eyes and hands.</p>
+
+        <div class="solution-pillars">
+            <div class="pillar reveal">
+                <div class="pillar-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                </div>
+                <span class="pillar-tag">Vision Pro App</span>
+                <h3>Spatial Control</h3>
+                <p>See a 3D dollhouse of your home floating in your space. Glance at a light to dim it. Pinch a thermostat to adjust it. Your home becomes the interface.</p>
+            </div>
+            <div class="pillar reveal">
+                <div class="pillar-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                        <line x1="12" y1="18" x2="12.01" y2="18"/>
+                    </svg>
+                </div>
+                <span class="pillar-tag">iPhone Companion</span>
+                <h3>RoomPlan Scanning</h3>
+                <p>Walk through your home with your iPhone to capture every room using Apple's RoomPlan API. No manual setup, no floor plans — just scan and go.</p>
+            </div>
+            <div class="pillar reveal">
+                <div class="pillar-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="6" width="20" height="12" rx="2"/>
+                        <path d="M12 12h.01"/><path d="M17 12h.01"/><path d="M7 12h.01"/>
+                    </svg>
+                </div>
+                <span class="pillar-tag">Hardware Hub</span>
+                <h3>Home Assistant Bridge</h3>
+                <p>Connects to 2,000+ device types through Home Assistant. One hub replaces the app drawer — Philips Hue, Nest, Ring, Sonos, and everything in between.</p>
+            </div>
+        </div>
+
+        <div class="solution-cta reveal">
+            <p>Not another app on your phone.<br>A <em>window into your home</em> you can reach into.</p>
         </div>
     </div>
 </section>
@@ -372,9 +486,10 @@ textEntrance
 gsap.registerPlugin(ScrollTrigger);
 
 document.querySelectorAll('.reveal').forEach((el, i) => {
+    const staggerParent = el.closest('.problem-stats') || el.closest('.solution-pillars');
     gsap.from(el, {
         y: 50, opacity: 0, duration: 0.9, ease: 'power3.out',
-        delay: el.closest('.problem-stats') ? (Array.from(el.parentNode.children).indexOf(el)) * 0.12 : 0,
+        delay: staggerParent ? (Array.from(el.parentNode.children).indexOf(el)) * 0.12 : 0,
         scrollTrigger: {
             trigger: el, start: 'top 88%',
             toggleActions: 'play none none none',
