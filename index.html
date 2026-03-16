@@ -91,13 +91,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     text-transform: uppercase; color: var(--text-muted);
 }
 .scroll-arrow {
-    width: 20px; height: 20px; border: none; background: none;
-    border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
-    transform: rotate(45deg); animation: scrollBounce 2s ease-in-out infinite;
+    animation: scrollBounce 2s ease-in-out infinite;
 }
 @keyframes scrollBounce {
-    0%, 100% { transform: rotate(45deg) translateY(0); opacity: 0.5; }
-    50% { transform: rotate(45deg) translateY(8px); opacity: 1; }
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(8px); opacity: 1; }
 }
     </style>
 </head>
@@ -119,7 +117,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     </div>
     <div class="scroll-hint">
         <span>Scroll to explore</span>
-        <div class="scroll-arrow"></div>
+        <svg class="scroll-arrow" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
 </section>
 
