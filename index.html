@@ -910,12 +910,22 @@ function createModeUI(type, personModel) {
 async function loadModels() {
     if (isMobile) return;
 
-    // AVP headset (hero)
+    // AVP headset (hero) — pivot on the screen/visor face
     try {
         const avp = await gltfLoader.loadAsync('assets/models/apple-vision-pro/source/AR-Code-1686060373323.glb');
-        models.avp = normalize(avp.scene, 3);
-        models.avp.position.set(0.5, 0.5, 0);
-        groups.hero.add(models.avp);
+        const avpMesh = normalize(avp.scene, 3);
+        // Compute front face offset: screen is at the front (min Z after normalize)
+        const avpBox = new THREE.Box3().setFromObject(avpMesh);
+        const avpDepth = avpBox.max.z - avpBox.min.z;
+        // Offset model so the front screen face sits at the pivot origin
+        avpMesh.position.z -= avpDepth * 0.45;
+        // Wrap in pivot group so rotation orbits around the screen center
+        const avpPivot = new THREE.Group();
+        avpPivot.add(avpMesh);
+        avpPivot.position.set(0.5, 0.5, 0);
+        models.avp = avpPivot;
+        models.avpMesh = avpMesh; // keep ref for material traversal
+        groups.hero.add(avpPivot);
         groups.hero.visible = true;
         console.log('AVP loaded');
     } catch (e) { console.warn('AVP load failed:', e); }
@@ -1084,7 +1094,8 @@ ScrollTrigger.create({
     onUpdate: (self) => {
         if (models.avp) {
             models.avp.rotation.y = self.progress * Math.PI * 0.3;
-            models.avp.traverse(c => {
+            const meshRoot = models.avpMesh || models.avp;
+            meshRoot.traverse(c => {
                 if (c.isMesh && c.material) {
                     if (c.material._origOpacity === undefined) c.material._origOpacity = c.material.opacity;
                     c.material.transparent = true;
@@ -1317,9 +1328,9 @@ ScrollTrigger.create({
             if (models.scanPerson) {
                 models.scanPerson.getWorldPosition(personWorldPos);
             }
-            // Camera offset: approach from slightly in front and above
-            const endCam = [personWorldPos.x + 0.8, personWorldPos.y + 0.6, personWorldPos.z + 1.2];
-            const endTgt = [personWorldPos.x, personWorldPos.y + 0.3, personWorldPos.z];
+            // Camera offset: get very close, slightly in front and above eye level
+            const endCam = [personWorldPos.x + 0.3, personWorldPos.y + 0.4, personWorldPos.z + 0.5];
+            const endTgt = [personWorldPos.x, personWorldPos.y + 0.2, personWorldPos.z];
             const startCam = [3, 3.5, 5];
             const startTgt = [0, 0, 0];
             camPos.set(
