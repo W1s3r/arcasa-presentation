@@ -91,12 +91,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     text-transform: uppercase; color: var(--text-muted);
 }
 .scroll-arrow {
-    width: 1px; height: 32px; background: linear-gradient(180deg, var(--accent), transparent);
-    animation: scrollBounce 2s ease-in-out infinite;
+    width: 20px; height: 20px; border: none; background: none;
+    border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+    transform: rotate(45deg); animation: scrollBounce 2s ease-in-out infinite;
 }
 @keyframes scrollBounce {
-    0%, 100% { transform: translateY(0); opacity: 0.5; }
-    50% { transform: translateY(8px); opacity: 1; }
+    0%, 100% { transform: rotate(45deg) translateY(0); opacity: 0.5; }
+    50% { transform: rotate(45deg) translateY(8px); opacity: 1; }
 }
     </style>
 </head>
