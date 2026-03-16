@@ -1048,29 +1048,14 @@ gsap.utils.toArray('.reveal-up').forEach(el => {
 });
 
 // ============================================================
-// SCENE SWITCHING
+// SCENE SWITCHING — integrated into pinned triggers below
+// Hero uses its own non-pinned trigger
 // ============================================================
 ScrollTrigger.create({
-    trigger: '#hero', start: 'top 80%', end: 'bottom 20%',
-    onEnter: () => setScene('hero'), onEnterBack: () => setScene('hero'),
-});
-ScrollTrigger.create({
-    trigger: '#modes-detail', start: 'top 80%', end: 'bottom 20%',
-    onEnter: () => setScene('modes'), onEnterBack: () => setScene('modes'),
-});
-ScrollTrigger.create({
-    trigger: '#switch-explode', start: 'top 80%', end: 'bottom 20%',
-    onEnter: () => setScene('switch'), onEnterBack: () => setScene('switch'),
-});
-
-['#problem', '#solution', '#architecture', '#modes', '#switchfinity',
- '#switch-details', '#dollhouse', '#dollhouse-detail', '#ahead', '#team', '#closing'].forEach(sel => {
-    const el = document.querySelector(sel);
-    if (!el) return;
-    ScrollTrigger.create({
-        trigger: sel, start: 'top 50%', end: 'bottom 50%',
-        onEnter: () => setScene('none'), onEnterBack: () => setScene('none'),
-    });
+    trigger: '#hero', start: 'top top', end: 'bottom top',
+    onEnter: () => setScene('hero'),
+    onEnterBack: () => setScene('hero'),
+    onLeave: () => setScene('none'),
 });
 
 // ============================================================
@@ -1094,6 +1079,10 @@ function setMode(index) {
 ScrollTrigger.create({
     trigger: '#modes-detail', start: 'top top', end: '+=300%',
     pin: true, scrub: true,
+    onEnter: () => setScene('modes'),
+    onEnterBack: () => setScene('modes'),
+    onLeave: () => setScene('none'),
+    onLeaveBack: () => setScene('none'),
     onUpdate: (self) => {
         const index = Math.min(Math.floor(self.progress * 3), 2);
         setMode(index);
@@ -1109,6 +1098,10 @@ const switchFill = document.querySelector('.switch-progress-fill');
 ScrollTrigger.create({
     trigger: '#switch-explode', start: 'top top', end: '+=250%',
     pin: true, scrub: true,
+    onEnter: () => setScene('switch'),
+    onEnterBack: () => setScene('switch'),
+    onLeave: () => setScene('none'),
+    onLeaveBack: () => setScene('none'),
     onUpdate: (self) => {
         const p = self.progress;
         updateSwitchExplode(p);
