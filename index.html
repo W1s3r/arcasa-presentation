@@ -280,6 +280,7 @@ p { font-weight: 300; font-size: 16px; color: var(--text-muted); line-height: 1.
 .mode-features li {
     padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
     font-size: 15px; color: var(--text-muted);
+    will-change: transform, opacity;
 }
 .mode-features li::before {
     content: ''; display: inline-block; width: 5px; height: 5px;
@@ -1122,89 +1123,117 @@ ScrollTrigger.create({
 const modePanels = document.querySelectorAll('.mode-panel');
 const modeNavItems = document.querySelectorAll('.mode-nav-item');
 const modePivotNames = ['touchPivot', 'naturalPivot', 'powerPivot'];
+const modeFeatureLists = document.querySelectorAll('.mode-features');
 let currentMode = 0;
 let modeScrollProgress = 0;
 
+function smoothstep(t) { return t * t * (3 - 2 * t); }
+
 function updateModePanels(progress) {
-    // Each mode occupies 1/3 of the scroll. Within each third:
-    //   0-15%: transition zone (prev exits up, current enters from below)
-    //   15-85%: current panel fully visible
-    //   85-100%: transition zone (current starts exiting up, next starts entering)
     const totalModes = 3;
+    const transIn = 0.08;  // 8% of each mode's range for enter
+    const transOut = 0.08; // 8% for exit
 
     modePanels.forEach((panel, i) => {
         const modeStart = i / totalModes;
         const modeEnd = (i + 1) / totalModes;
-        const modeMid = (modeStart + modeEnd) / 2;
+        const localP = (progress - modeStart) / (1 / totalModes); // 0..1
 
-        // Normalize progress within this mode's range
-        const localP = (progress - modeStart) / (1 / totalModes); // 0..1 for this mode
-
-        if (progress < modeStart - 0.02) {
-            // Not yet reached — waiting below
+        // --- Panel slide animation ---
+        if (progress < modeStart - 0.01) {
             panel.style.transform = 'translateY(100%)';
             panel.style.opacity = '0';
             panel.style.zIndex = '2';
-            panel.classList.remove('active', 'exiting-up');
             panel.style.pointerEvents = 'none';
-        } else if (progress >= modeEnd + 0.02) {
-            // Already passed — gone above
+        } else if (progress >= modeEnd + 0.01) {
             panel.style.transform = 'translateY(-60%)';
             panel.style.opacity = '0';
             panel.style.zIndex = '2';
-            panel.classList.remove('active', 'exiting-up');
+            panel.style.pointerEvents = 'none';
+        } else if (localP < 0) {
+            // Approaching from below
+            const t = Math.max(0, Math.min(1, (localP + transIn) / transIn));
+            const e = smoothstep(t);
+            panel.style.transform = `translateY(${(1 - e) * 100}%)`;
+            panel.style.opacity = `${e}`;
+            panel.style.zIndex = '4';
+            panel.style.pointerEvents = 'none';
+        } else if (localP < transIn) {
+            // Entering
+            const e = smoothstep(localP / transIn);
+            panel.style.transform = `translateY(${(1 - e) * 80}%)`;
+            panel.style.opacity = `${e}`;
+            panel.style.zIndex = '4';
+            panel.style.pointerEvents = 'none';
+        } else if (localP > (1 - transOut) && i < totalModes - 1) {
+            // Exiting
+            const e = smoothstep((localP - (1 - transOut)) / transOut);
+            panel.style.transform = `translateY(${-e * 60}%)`;
+            panel.style.opacity = `${1 - e}`;
+            panel.style.zIndex = '3';
             panel.style.pointerEvents = 'none';
         } else {
-            // In or near this mode's zone
-            const transIn = 0.12;
-            const transOut = 0.12;
+            // Fully visible
+            panel.style.transform = 'translateY(0)';
+            panel.style.opacity = '1';
+            panel.style.zIndex = '5';
+            panel.style.pointerEvents = 'auto';
+        }
 
-            if (localP < 0) {
-                const t = (localP + transIn) / transIn;
-                const clamped = Math.max(0, Math.min(1, t));
-                const eased = clamped * clamped * (3 - 2 * clamped);
-                panel.style.transform = `translateY(${(1 - eased) * 100}%)`;
-                panel.style.opacity = `${eased}`;
-                panel.style.zIndex = '4'; // entering panel on top
-                panel.style.pointerEvents = 'none';
-            } else if (localP <= 1) {
-                if (localP < transIn) {
-                    const t = localP / transIn;
-                    const eased = t * t * (3 - 2 * t);
-                    panel.style.transform = `translateY(${(1 - eased) * 80}%)`;
-                    panel.style.opacity = `${eased}`;
-                    panel.style.zIndex = '4';
-                } else if (localP > (1 - transOut) && i < totalModes - 1) {
-                    const t = (localP - (1 - transOut)) / transOut;
-                    const eased = t * t * (3 - 2 * t);
-                    panel.style.transform = `translateY(${-eased * 60}%)`;
-                    panel.style.opacity = `${1 - eased}`;
-                    panel.style.zIndex = '3'; // exiting panel behind entering one
-                } else {
-                    panel.style.transform = 'translateY(0)';
-                    panel.style.opacity = '1';
-                    panel.style.zIndex = '5'; // fully active panel on top
-                }
-                panel.classList.add('active');
-                panel.classList.remove('exiting-up');
-                panel.style.pointerEvents = localP >= transIn && localP <= (1 - transOut) ? 'auto' : 'none';
+        // --- Sequential list item reveal ---
+        const features = panel.querySelectorAll('.mode-features li');
+        if (features.length && localP >= 0 && localP <= 1) {
+            const contentStart = transIn;
+            const contentEnd = 1 - transOut;
+            const contentRange = contentEnd - contentStart;
+            features.forEach((li, fi) => {
+                // Each item appears at a staggered point through the content range
+                const itemStart = contentStart + (fi / features.length) * contentRange * 0.6;
+                const itemP = Math.max(0, Math.min(1, (localP - itemStart) / 0.1));
+                const e = smoothstep(itemP);
+                li.style.opacity = `${e}`;
+                li.style.transform = `translateY(${(1 - e) * 20}px)`;
+            });
+        } else {
+            // Reset when not visible
+            const features2 = panel.querySelectorAll('.mode-features li');
+            features2.forEach(li => { li.style.opacity = '0'; li.style.transform = 'translateY(20px)'; });
+        }
+    });
+
+    // Update nav and 3D models
+    const newMode = Math.min(Math.floor(progress * totalModes), totalModes - 1);
+    modeNavItems.forEach((item, i) => item.classList.toggle('active', i === newMode));
+
+    // Smooth 3D model transitions — slide in/out of frame
+    modePivotNames.forEach((name, i) => {
+        const pivot = models[name];
+        if (!pivot) return;
+        const modeStart = i / totalModes;
+        const localP = (progress - modeStart) / (1 / totalModes);
+
+        if (localP < -0.05 || localP > 1.05) {
+            pivot.visible = false;
+        } else {
+            pivot.visible = true;
+            // Slide Y position: enter from below, exit upward
+            if (localP < transIn) {
+                const e = smoothstep(Math.max(0, localP) / transIn);
+                pivot.position.set(2, -0.3 + (1 - e) * 3, 0); // rise from below
+            } else if (localP > (1 - transOut) && i < totalModes - 1) {
+                const e = smoothstep((localP - (1 - transOut)) / transOut);
+                pivot.position.set(2, -0.3 - e * 3, 0); // drop down to exit
+            } else {
+                pivot.position.set(2, -0.3, 0);
             }
         }
     });
 
-    // Update nav indicators and 3D model visibility
-    const newMode = Math.min(Math.floor(progress * totalModes), totalModes - 1);
-    if (newMode !== currentMode) {
-        currentMode = newMode;
-        modeNavItems.forEach((item, i) => item.classList.toggle('active', i === newMode));
-        modePivotNames.forEach((name, i) => {
-            if (models[name]) models[name].visible = (i === newMode);
-        });
-    }
+    currentMode = newMode;
 }
 
 ScrollTrigger.create({
-    trigger: '#modes-detail', start: 'top top', end: '+=300%',
+    trigger: '#modes-detail', start: 'top top', end: '+=500%',
     pin: true, scrub: true,
     onEnter: () => setScene('modes'),
     onEnterBack: () => setScene('modes'),
@@ -1216,10 +1245,15 @@ ScrollTrigger.create({
     }
 });
 
-// Initialize first mode panel visible
+// Initialize first mode panel + hide list items initially
 modePanels[0].style.transform = 'translateY(0)';
 modePanels[0].style.opacity = '1';
 modePanels[0].style.pointerEvents = 'auto';
+document.querySelectorAll('.mode-features li').forEach(li => {
+    li.style.opacity = '0';
+    li.style.transform = 'translateY(20px)';
+    li.style.transition = 'none';
+});
 
 // ============================================================
 // DOLLHOUSE VIEW (pinned scroll-driven build + orbit)
@@ -1240,44 +1274,44 @@ ScrollTrigger.create({
 
         if (!models.lab) return;
 
-        // Phase 1: Build animation (0 -> 0.25)
-        if (p < 0.25) {
-            const buildP = p / 0.25;
-            const eased = 1 - Math.pow(1 - buildP, 3); // ease out cubic
-            const scale = eased;
-            models.lab.scale.set(scale, scale, scale);
-            models.lab.rotation.y = -Math.PI * (1 - eased);
-        } else {
-            // Ensure fully built
-            if (!dollhouseBuilt) {
-                models.lab.scale.set(1, 1, 1);
-                dollhouseBuilt = true;
-            }
+        // Phase 1: Build animation (0 -> 0.2) — scale up + reveal spin
+        if (p < 0.2) {
+            const buildP = p / 0.2;
+            const eased = 1 - Math.pow(1 - buildP, 3);
+            models.lab.scale.set(eased, eased, eased);
+            models.lab.rotation.y = -Math.PI * (1 - eased); // spin from -180° to 0°
+            if (models.scanSpotlight) models.scanSpotlight.intensity = 0;
         }
-
-        // Phase 2: Orbit camera (0.25 -> 0.7)
-        if (p >= 0.25 && p < 0.7) {
-            const orbitP = (p - 0.25) / 0.45;
-            // 270° orbit
-            const angle = orbitP * Math.PI * 1.5;
+        // Phase 2: Orbit (0.2 -> 0.5) — camera orbits, lab stays at rotation 0
+        else if (p < 0.5) {
+            if (!dollhouseBuilt) { models.lab.scale.set(1,1,1); dollhouseBuilt = true; }
+            const orbitP = (p - 0.2) / 0.3;
+            const angle = orbitP * Math.PI * 1.2; // ~216° orbit
             const radius = 5;
-            const camY = 3.5 - orbitP * 1.0;
-            camPos.set(
-                Math.sin(angle) * radius,
-                camY,
-                Math.cos(angle) * radius
-            );
+            camPos.set(Math.sin(angle) * radius, 3.5 - orbitP * 0.5, Math.cos(angle) * radius);
             camTarget.set(0, 0, 0);
-            // Dim scan spotlight during orbit
-            if (models.scanSpotlight) models.scanSpotlight.intensity = orbitP * 2;
+            models.lab.rotation.y = 0;
+            if (models.scanSpotlight) models.scanSpotlight.intensity = 0;
         }
-
-        // Phase 3: Zoom into scanning person (0.7 -> 1.0)
-        if (p >= 0.7) {
-            const zoomP = (p - 0.7) / 0.3;
-            const eased = zoomP * zoomP * (3 - 2 * zoomP);
-            // Sweep from orbit end position to close-up on scan person
-            const startCam = [Math.sin(Math.PI * 1.5) * 5, 2.5, Math.cos(Math.PI * 1.5) * 5];
+        // Phase 3: Rotate lab 90° to reveal scanning person + spotlight fade in (0.5 -> 0.75)
+        else if (p < 0.75) {
+            const rotP = (p - 0.5) / 0.25;
+            const eased = smoothstep(rotP);
+            models.lab.rotation.y = eased * (Math.PI / 2); // 0° → 90°
+            // Camera settles to presentation view
+            camPos.set(3, 3, 5);
+            camTarget.set(0, 0, 0);
+            // Spotlight fades in (0 → 8) matching presentation
+            if (models.scanSpotlight) models.scanSpotlight.intensity = eased * 8;
+        }
+        // Phase 4: Zoom into scanning person (0.75 -> 1.0) — camera sweeps close
+        else {
+            models.lab.rotation.y = Math.PI / 2; // hold 90°
+            if (models.scanSpotlight) models.scanSpotlight.intensity = 8;
+            const zoomP = (p - 0.75) / 0.25;
+            const eased = smoothstep(zoomP);
+            // Sweep from settled position to close-up on scan person (presentation slide 18 values)
+            const startCam = [3, 3, 5];
             const endCam = [1.3, 0.15, 0.6];
             const startTgt = [0, 0, 0];
             const endTgt = [0.6, -0.1, 0.2];
@@ -1291,8 +1325,8 @@ ScrollTrigger.create({
                 startTgt[1] + (endTgt[1] - startTgt[1]) * eased,
                 startTgt[2] + (endTgt[2] - startTgt[2]) * eased
             );
-            // Intensify scan spotlight as we zoom in
-            if (models.scanSpotlight) models.scanSpotlight.intensity = 2 + eased * 6;
+            // Hold spotlight at full intensity during zoom
+            if (models.scanSpotlight) models.scanSpotlight.intensity = 8;
         }
     }
 });
@@ -1364,15 +1398,15 @@ function animate() {
         models.avp.rotation.y += 0.002;
     }
 
-    // Modes: scroll-driven rotation (full Y rotation mapped to scroll within each mode)
+    // Modes: scroll-driven rotation
     if (activeScene === 'modes') {
-        const activePivot = models[modePivotNames[currentMode]];
-        if (activePivot) {
-            // Each mode gets 1/3 of scroll. Map sub-progress to rotation.
-            const modeLocalP = (modeScrollProgress * 3) - currentMode; // 0..1 within current mode
-            const clamped = Math.max(0, Math.min(1, modeLocalP));
-            activePivot.rotation.y = clamped * Math.PI * 0.6 - Math.PI * 0.1; // -18deg to +90deg sweep
-        }
+        modePivotNames.forEach((name, i) => {
+            const pivot = models[name];
+            if (!pivot || !pivot.visible) return;
+            const localP = (modeScrollProgress * 3) - i;
+            const clamped = Math.max(0, Math.min(1, localP));
+            pivot.rotation.y = clamped * Math.PI * 0.5 - Math.PI * 0.05;
+        });
     }
 
     // Dollhouse: gentle float
