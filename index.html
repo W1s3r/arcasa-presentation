@@ -97,6 +97,81 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     0%, 100% { transform: translateY(0); opacity: 0.5; }
     50% { transform: translateY(8px); opacity: 1; }
 }
+
+/* ============ SECTIONS (shared) ============ */
+.section-solid { background: var(--bg); position: relative; z-index: 1; }
+.section-inner {
+    width: 100%; max-width: 1100px; margin: 0 auto;
+    padding: 140px 48px;
+}
+.section-label {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+    letter-spacing: 4px; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 24px; display: flex; align-items: center; gap: 14px;
+}
+.section-label::before { content: ''; width: 32px; height: 1px; background: var(--accent); }
+
+/* ============ PROBLEM ============ */
+#problem .problem-headline {
+    font-family: var(--font-display); font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700; line-height: 1.1; margin-bottom: 28px;
+    color: var(--text);
+}
+#problem .problem-headline em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+#problem .problem-sub {
+    font-size: 20px; color: var(--text-muted); max-width: 640px;
+    line-height: 1.7; margin-bottom: 72px;
+}
+.problem-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+}
+.stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 40px 32px; position: relative; overflow: hidden;
+    transition: border-color 0.4s;
+}
+.stat-card:hover { border-color: rgba(255,255,255,0.1); }
+.stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+}
+.stat-number {
+    font-family: var(--font-display); font-size: clamp(40px, 5vw, 56px);
+    font-weight: 800; line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 12px;
+}
+.stat-card h3 {
+    font-family: var(--font-display); font-size: 18px; font-weight: 600;
+    color: var(--text); margin-bottom: 8px;
+}
+.stat-card p {
+    font-size: 15px; color: var(--text-muted); line-height: 1.6;
+}
+
+.problem-quote {
+    margin-top: 80px; padding: 48px; position: relative;
+    border-left: 2px solid var(--accent);
+}
+.problem-quote blockquote {
+    font-family: var(--font-body); font-size: clamp(20px, 2.5vw, 28px);
+    font-weight: 300; font-style: italic; color: var(--text); line-height: 1.6;
+}
+.problem-quote cite {
+    display: block; margin-top: 20px;
+    font-family: var(--font-mono); font-size: 13px; font-style: normal;
+    color: var(--text-muted); letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+    .problem-stats { grid-template-columns: 1fr; }
+    .section-inner { padding: 80px 24px; }
+}
     </style>
 </head>
 <body>
@@ -121,7 +196,40 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     </div>
 </section>
 
+<!-- ====== PROBLEM ====== -->
+<section id="problem" class="section-solid">
+    <div class="section-inner">
+        <div class="section-label reveal">THE PROBLEM</div>
+        <h2 class="problem-headline reveal">Smart homes have a <em>complexity problem</em></h2>
+        <p class="problem-sub reveal">The average smart home runs 4+ apps to control lights, locks, cameras, and climate. Every new device adds friction. The market is growing, but the experience isn't keeping up.</p>
+
+        <div class="problem-stats">
+            <div class="stat-card reveal">
+                <div class="stat-number">67%</div>
+                <h3>Give Up</h3>
+                <p>of smart home owners stop using at least one device within 6 months due to complexity</p>
+            </div>
+            <div class="stat-card reveal">
+                <div class="stat-number">4.8</div>
+                <h3>Apps Per Home</h3>
+                <p>Average number of separate apps required to manage a single household's connected devices</p>
+            </div>
+            <div class="stat-card reveal">
+                <div class="stat-number">$150B</div>
+                <h3>Market by 2028</h3>
+                <p>Global smart home market growing at 25% CAGR — but retention remains the industry's biggest problem</p>
+            </div>
+        </div>
+
+        <div class="problem-quote reveal">
+            <blockquote>"The smart home doesn't need more devices. It needs a better way to see and control the ones you already have."</blockquote>
+            <cite>— SMART founding thesis</cite>
+        </div>
+    </div>
+</section>
+
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 <script type="importmap">
 {
     "imports": {
@@ -257,6 +365,22 @@ textEntrance
     .fromTo('.hero-subtitle', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
     .fromTo('.hero-tags', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3')
     .fromTo('.scroll-hint', { opacity: 0 }, { opacity: 1, duration: 0.8 }, '-=0.2');
+
+// ============================================================
+// SCROLL REVEALS
+// ============================================================
+gsap.registerPlugin(ScrollTrigger);
+
+document.querySelectorAll('.reveal').forEach((el, i) => {
+    gsap.from(el, {
+        y: 50, opacity: 0, duration: 0.9, ease: 'power3.out',
+        delay: el.closest('.problem-stats') ? (Array.from(el.parentNode.children).indexOf(el)) * 0.12 : 0,
+        scrollTrigger: {
+            trigger: el, start: 'top 88%',
+            toggleActions: 'play none none none',
+        }
+    });
+});
 
 // ============================================================
 // RENDER LOOP
