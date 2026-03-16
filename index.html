@@ -313,7 +313,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
         </div>
 
         <div class="solution-cta reveal">
-            <p>Your home already has three dimensions.<br>Now it has an interface to match — <em>welcome to the new dimension of home.</em></p>
+            <p>Not another app on your phone.<br><em>Step into a new dimension of your home.</em></p>
         </div>
     </div>
 </section>
@@ -461,23 +461,13 @@ textEntrance
 // ============================================================
 gsap.registerPlugin(ScrollTrigger);
 
-// AVP scroll rotation — rotate back to facing forward as user scrolls past hero
+// AVP scroll rotation — turn from angled (y:0) to facing straight at camera
 if (window.innerWidth >= 768) {
     const checkAVPScroll = setInterval(() => {
         if (!avpPivot) return;
         clearInterval(checkAVPScroll);
-        gsap.to(avpPivot.rotation, {
-            y: -Math.PI * 0.5,
-            ease: 'none',
-            scrollTrigger: {
-                trigger: '#hero',
-                start: 'top top',
-                end: 'bottom top',
-                scrub: 0.8,
-            }
-        });
-        gsap.to(avpPivot.scale, {
-            x: 0.6, y: 0.6, z: 0.6,
+        gsap.fromTo(avpPivot.rotation, { y: 0 }, {
+            y: -Math.PI * 0.15,
             ease: 'none',
             scrollTrigger: {
                 trigger: '#hero',
