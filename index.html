@@ -231,6 +231,24 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     font-weight: 500;
 }
 
+/* ============ HOW IT WORKS ============ */
+#how-it-works {
+    background: transparent; position: relative; z-index: 1;
+}
+#how-it-works .section-inner {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+}
+.hiw-headline {
+    font-family: var(--font-display); font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700; line-height: 1.1; color: var(--text);
+    margin-bottom: 20px;
+}
+.hiw-sub {
+    font-size: 20px; color: var(--text-muted); max-width: 680px;
+    line-height: 1.7; margin: 0 auto;
+}
+
 @media (max-width: 768px) {
     .problem-stats { grid-template-columns: 1fr; }
     .feature-item { gap: 24px; }
@@ -326,6 +344,15 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
         <div class="solution-cta reveal">
             <p>Not another app on your phone.<br><em>Step into a new dimension of your home.</em></p>
         </div>
+    </div>
+</section>
+
+<!-- ====== HOW IT WORKS ====== -->
+<section id="how-it-works">
+    <div class="section-inner">
+        <div class="section-label reveal">HOW IT WORKS</div>
+        <h2 class="hiw-headline reveal">Built on Apple Vision Pro</h2>
+        <p class="hiw-sub reveal">The most advanced augmented reality headset ever made — with eye tracking, hand gestures, and spatial awareness that finally makes a truly intuitive smart home interface possible.</p>
     </div>
 </section>
 
@@ -473,11 +500,13 @@ textEntrance
 // ============================================================
 gsap.registerPlugin(ScrollTrigger);
 
-// AVP scroll rotation — turn from angled (y:0) to facing straight at camera
+// AVP scroll animations
 if (window.innerWidth >= 768) {
     const checkAVPScroll = setInterval(() => {
         if (!avpPivot) return;
         clearInterval(checkAVPScroll);
+
+        // 1. Hero scroll rotation
         gsap.fromTo(avpPivot.rotation, { y: 0 }, {
             y: -Math.PI * 1.5,
             ease: 'none',
@@ -488,6 +517,37 @@ if (window.innerWidth >= 768) {
                 scrub: 0.8,
             }
         });
+
+        // 2. Fade out as user scrolls into Problem section
+        gsap.to(avpPivot.scale, {
+            x: 0, y: 0, z: 0,
+            scrollTrigger: {
+                trigger: '#problem',
+                start: 'top 80%',
+                end: 'top 30%',
+                scrub: 0.5,
+            }
+        });
+
+        // 3. Spin back in at How It Works section
+        const hiwTl = gsap.timeline({
+            scrollTrigger: {
+                trigger: '#how-it-works',
+                start: 'top 80%',
+                end: 'top 20%',
+                scrub: 0.8,
+            }
+        });
+        hiwTl
+            .fromTo(avpPivot.scale,
+                { x: 0, y: 0, z: 0 },
+                { x: 1, y: 1, z: 1, ease: 'none' }
+            )
+            .fromTo(avpPivot.rotation,
+                { y: Math.PI },
+                { y: 0, ease: 'none' },
+                0 // same time as scale
+            );
     }, 100);
 }
 
